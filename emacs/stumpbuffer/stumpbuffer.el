@@ -111,6 +111,8 @@
 
 (defvar stumpbuffer-mode-frame-map
   (let ((map (make-sparse-keymap)))
+    (define-key map (kbd "m") 'stumpbuffer-mark-frame)
+    (define-key map (kbd "u") 'stumpbuffer-unmark-frame)
     map))
 
 (defvar stumpbuffer-mode-window-map
@@ -138,6 +140,12 @@
     (list :start (point-at-bol)
           :end (point-at-eol)
           :group-plist (get-text-property (point) 'stumpbuffer-group-plist))))
+
+(defun stumpbuffer-on-frame-name ()
+  (when-let ((frame (get-text-property (point) 'stumpbuffer-frame-number)))
+    (list :start (point-at-bol)
+          :end (point-at-eol)
+          :frame-plist (get-text-property (point) 'stumpbuffer-frame-plist))))
 
 (defun stumpbuffer-on-window ()
   "If point is on a window row, return info about it."
@@ -216,6 +224,17 @@
      (lambda (win) 
        (stumpbuffer-change-window-mark win mark)))
     (stumpbuffer-forward-group)))
+
+(defun stumpbuffer-mark-frame (mark)
+  "If point is on a frame, mark all windows in it."
+  (interactive (list ?*))
+  (when-let ((frame (stumpbuffer-on-frame-name))
+             (frame-num (getf (getf frame :frame-plist) :number)))
+    (stumpbuffer-map-group-windows
+     (lambda (win)
+       (when (= frame-num (getf (getf win :window-plist) :frame))
+         (stumpbuffer-change-window-mark win mark))))
+    (stumpbuffer-forward-frame)))
 
 (defun stumpbuffer-mark (mark)
   "If point is on a window, mark it."
@@ -353,6 +372,31 @@
     (goto-char (point-max)))
   (beginning-of-line)
   (forward-line -1))
+
+(defun stumpbuffer-forward-frame ()
+  (interactive)
+  (when (stumpbuffer-on-frame-name)
+    (stumpbuffer-forward-line))
+  (goto-char (next-single-property-change (point)
+                                          'stumpbuffer-frame
+                                          nil
+                                          (point-max)))
+  (when (= (point) (point-max))
+    (goto-char (point-min)))
+  (beginning-of-line))
+
+(defun stumpbuffer-backward-frame ()
+  (interactive)
+  (when (stumpbuffer-on-frame-name)
+    (stumpbuffer-backward-line))
+  (goto-char (previous-single-property-change (point)
+                                              'stumpbuffer-frame
+                                              nil
+                                              (point-min)))
+  (when (= (point) (point-min))
+    (goto-char (point-max))
+    (stumpbuffer-backward-group))
+  (beginning-of-line))
 
 (defun stumpbuffer-forward-group ()
   (interactive)
