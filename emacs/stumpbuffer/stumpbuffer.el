@@ -96,6 +96,7 @@
     (define-key map (kbd "% i") 'stumpbuffer-mark-by-window-instance)
     (define-key map (kbd "% g") 'stumpbuffer-mark-current-group)
     (define-key map (kbd "C") 'stumpbuffer-create-group)
+    (define-key map (kbd "q") 'stumpbuffer-quit-window)
     map))
 
 (defvar stumpbuffer-mode-group-map
@@ -511,7 +512,7 @@
     (stumpbuffer-command "switch-to-group"
                          (number-to-string group))
     (when stumpbuffer-quit-window-after-command
-      (quit-window))))
+      (stumpbuffer-quit-window))))
 
 (defun stumpbuffer-focus-window (group window)
   (interactive (list (get-text-property (point) 'stumpbuffer-group)
@@ -521,7 +522,7 @@
                          (number-to-string group)
                          (number-to-string window))
     (when stumpbuffer-quit-window-after-command
-      (quit-window))))
+      (stumpbuffer-quit-window))))
 
 (defun stumpbuffer-pull-windows ()
   (interactive)
@@ -539,7 +540,7 @@
         (when-let ((win (stumpbuffer-on-window)))
           (pull-window win)))
       (when stumpbuffer-quit-window-after-command
-        (quit-window)))))
+        (stumpbuffer-quit-window)))))
 
 (defun stumpbuffer-throw-marked-windows-to-group ()
   (interactive)
@@ -673,6 +674,13 @@
               (point))
        'stumpbuffer-group number))))
 
+(defun stumpbuffer-quit-window ()
+  (interactive)
+  (when-let ((buf (get-buffer "*StumpBuffer*")))
+    (kill-buffer buf))
+  (when stumpbuffer-kill-frame-on-exit-p
+    (delete-frame)))
+
 (defun stumpbuffer-update ()
   (interactive)
   (unwind-protect
@@ -684,9 +692,13 @@
     (setq buffer-read-only t)
     (goto-char (point-min))))
 
-(defun stumpbuffer ()
-  (interactive)
-  (switch-to-buffer (get-buffer-create "*StumpBuffer*"))
+(defun stumpbuffer (other-frame-p)
+  (interactive (list nil))
+  (let ((buffer (get-buffer-create "*StumpBuffer*")))
+    (if other-frame-p
+        (switch-to-buffer-other-frame buffer)
+      (switch-to-buffer buffer)))
+  (setq stumpbuffer-kill-frame-on-exit-p other-frame-p)
   (stumpbuffer-mode)
   (stumpbuffer-update)
   (unwind-protect
@@ -695,12 +707,16 @@
         (run-hooks 'stumpbuffer-hook))
     (setq buffer-read-only t)))
 
+(defun stumpbuffer-other-frame ()
+  (interactive)
+  (stumpbuffer t))
+
 (define-derived-mode stumpbuffer-mode special-mode "StumpBuffer"
   "A major mode for controlling Stumpwm."
   (setq buffer-read-only t)
   (buffer-disable-undo)
   (hl-line-mode)
-  )
+  (set (make-local-variable 'stumpbuffer-kill-frame-on-exit-p) nil))
 
 (provide 'stumpbuffer)
 (run-hooks 'stumpbuffer-load-hook)
