@@ -42,7 +42,7 @@
   :type 'boolean
   :group 'stumpbuffer)
 
-(defcustom stumpbuffer-show-frames-p nil
+(defcustom stumpbuffer-show-frames-p t
   "Should frames be shown?"
   :type 'boolean
   :group 'stumpbuffer)
@@ -72,8 +72,7 @@
   :type 'face
   :group 'stumpbuffer)
 
-(defvar stumpbuffer-window-format '((:frame 1 "F")
-                                    (:number 3 "N")
+(defvar stumpbuffer-window-format '((:number 3 "N")
                                     (:title 35 "Title")
                                     (:class 10 "Class")
                                     (:role 10 "Role")
@@ -91,7 +90,7 @@
     (define-key map (kbd "d") 'stumpbuffer-mark-to-kill)
     (define-key map (kbd "x") 'stumpbuffer-execute-marks)
     (define-key map (kbd "% r") 'stumpbuffer-mark-by-window-title-regex)
-    (define-key map (kbd "% f") 'stumpbuffer-mark-frame)
+    (define-key map (kbd "% f") 'stumpbuffer-mark-by-frame)
     (define-key map (kbd "% c") 'stumpbuffer-mark-by-window-class)
     (define-key map (kbd "% R") 'stumpbuffer-mark-by-window-role)
     (define-key map (kbd "% i") 'stumpbuffer-mark-by-window-instance)
@@ -107,12 +106,14 @@
     (define-key map (kbd "T") 'stumpbuffer-throw-marked-windows-to-group)
     (define-key map (kbd "N") 'stumpbuffer-rename-group)
     (define-key map (kbd "D") 'stumpbuffer-kill-group)
+    (define-key map (kbd "d") 'stumpbuffer-mark-group-for-kill)
     map))
 
 (defvar stumpbuffer-mode-frame-map
   (let ((map (make-sparse-keymap)))
     (define-key map (kbd "m") 'stumpbuffer-mark-frame)
     (define-key map (kbd "u") 'stumpbuffer-unmark-frame)
+    (define-key map (kbd "d") 'stumpbuffer-mark-frame-for-kill)
     map))
 
 (defvar stumpbuffer-mode-window-map
@@ -216,10 +217,11 @@
                                  stumpbuffer-marked-face))))
     (setq buffer-read-only t)))
 
-(defun stumpbuffer-mark-group (mark)
+(defun stumpbuffer-mark-group (group mark)
   "If point is on group, mark all windows in it."
-  (interactive (list ?*))
-  (when-let ((group (stumpbuffer-on-group-name)))
+  (interactive (list (stumpbuffer-on-group-name)
+                     ?*))
+  (when group
     (stumpbuffer-map-group-windows
      (lambda (win) 
        (stumpbuffer-change-window-mark win mark)))
@@ -243,10 +245,10 @@
     (stumpbuffer-change-window-mark win mark)
     (stumpbuffer-forward-line)))
 
-(defun stumpbuffer-unmark-group ()
+(defun stumpbuffer-unmark-group (group)
   "If point is on group, unmark all windows in it."
-  (interactive)
-  (stumpbuffer-mark-group nil))
+  (interactive (list (stumpbuffer-on-group-name)))
+  (stumpbuffer-mark-group group nil))
 
 (defun stumpbuffer-unmark-frame ()
   "If point is on group, unmark all windows in it."
@@ -278,7 +280,7 @@
        (when (string-match regex title)
          (stumpbuffer-mark mark))))))
 
-(defun stumpbuffer-mark-frame (frame mark)
+(defun stumpbuffer-mark-by-frame (frame mark)
   (interactive (list (getf (getf (stumpbuffer-on-window) :window-plist) :frame)
                      ?*))
   (stumpbuffer-map-group-windows
@@ -286,6 +288,17 @@
      (when-let ((f (getf (getf win :window-plist) :frame)))
        (when (= f frame)
          (stumpbuffer-mark mark))))))
+
+(defun stumpbuffer-mark-frame-for-kill (frame)
+  (interactive (list (getf (getf (stumpbuffer-on-frame-name) :frame-plist)
+                           :number)))
+  (stumpbuffer-mark-by-frame frame ?D)
+  (stumpbuffer-forward-frame))
+
+(defun stumpbuffer-mark-group-for-kill (group)
+  (interactive (list (getf (getf (stumpbuffer-on-group-name) :group-plist)
+                           :number)))
+  (stumpbuffer-mark-group group ?D))
 
 (defun stumpbuffer-mark-by-window-class (class mark)
   (interactive (list (getf (getf (stumpbuffer-on-window) :window-plist) :class)
@@ -340,8 +353,8 @@
   (when (yes-or-no-p (format "Kill window '%s'? "
                              (getf (getf win :window-plist)
                                    :title)))
-    (stumpbuffer-kill win))
-  (stumpbuffer-update))
+    (stumpbuffer-kill win)
+    (stumpbuffer-update)))
 
 (defun stumpbuffer-create-group (name)
   (interactive (list (read-string "New group name: ")))
