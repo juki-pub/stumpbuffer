@@ -211,34 +211,35 @@ respectively."
 
 (defcommand stumpbuffer-get-data () ()
   "Retrieve information about groups and windows for StumpBuffer."
-  (flet ((number (plist) (getf plist :number)))
+  (labels ((number (plist) (getf plist :number))
+           (window-plist (window)
+             (list :number (window-number window)
+                   :frame (frame-number
+                           (window-frame window))
+                   :title (window-name window)
+                   :class (window-class window)
+                   :role (window-role window)
+                   :instance (window-res window)))
+           (frame-plist (group frame)
+             (list :number (frame-number frame)
+                   :windows (sort
+                             (mapcar #'window-plist (frame-windows group frame))
+                             #'< :key #'number)))
+           (group-plist (group)
+             (let ((type (if (typep group 'stumpwm::float-group)
+                             :floating
+                             :tiling)))
+               (list* :number (group-number group)
+                      :name (group-name group)
+                      :type type
+                      (if (eql type :tiling)
+                          (list :frames
+                                (sort (mapcar (lambda (frame)
+                                                (frame-plist group frame))
+                                              (group-frames group))
+                                      #'< :key #'number)))))))
     (with-simple-error-handling
       (let ((*print-case* :downcase))
-        (message
-         "~s"
-         (let ((groups (screen-groups (current-screen))))
-           (sort
-            (mapcar
-             (lambda (group)
-               (list :number (group-number group)
-                     :name (group-name group)
-                     :frames (sort
-                              (mapcar
-                               (lambda (frame)
-                                 (list :number (frame-number frame)
-                                       :windows (sort
-                                                 (mapcar
-                                                  (lambda (window)
-                                                    (list :number (window-number window)
-                                                          :frame (frame-number
-                                                                  (window-frame window))
-                                                          :title (window-name window)
-                                                          :class (window-class window)
-                                                          :role (window-role window)
-                                                          :instance (window-res window)))
-                                                  (frame-windows group frame))
-                                                 #'< :key #'number)))
-                               (group-frames group))
-                              #'< :key #'number)))
-             groups)
-            #'< :key #'number)))))))
+        (message "~s" (let ((groups (screen-groups (current-screen))))
+                        (sort (mapcar #'group-plist groups)
+                              #'< :key #'number)))))))
