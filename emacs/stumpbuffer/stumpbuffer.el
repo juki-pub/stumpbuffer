@@ -670,7 +670,7 @@
        'stumpbuffer-frame number))))
 
 (defun stumpbuffer-insert-group (group-plist)
-  (destructuring-bind (&key number name frames &allow-other-keys)
+  (destructuring-bind (&key number name frames type &allow-other-keys)
       group-plist
     (add-text-properties
      (point)
@@ -680,6 +680,8 @@
             (when name
               (insert name))
             (insert " ]")
+            (when (eql type :floating)
+              (insert " Floating groups don't work yet!"))
             (point))
      `(keymap ,stumpbuffer-mode-group-map
               font-lock-face ,stumpbuffer-group-face
