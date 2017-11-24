@@ -81,23 +81,24 @@
 (defcommand stumpbuffer-rename-group (group-num name)
     ((:number "Group number: ")
      (:string "New name: "))
-  (let* ((group (find-group-by-number group-num)))
-    ;; This is largely copied from the standard GRENAME command.
-    (cond ((find-group (current-screen) name)
-           (message "Name already exists."))
-          ((or (zerop (length name))
-               (string= name "."))
-           (message "Empty name."))
-          (t (cond
-               ((and (char= (char name 0) #\.)
-                     (not (char= (char (group-name group) 0) #\.)))
-                (setf (group-number group) (find-free-hidden-group-number
-                                            (current-screen))))
-               ((and (not (char= (char name 0) #\.))
-                     (char= (char (group-name group) 0) #\.))
-                (setf (group-number group) (find-free-group-number
-                                            (current-screen)))))
-             (setf (group-name group) name)))))
+  (with-simple-error-handling
+    (let* ((group (find-group-by-number group-num)))
+      ;; This is largely copied from the standard GRENAME command.
+      (cond ((find-group (current-screen) name)
+             (error "Name already exists."))
+            ((or (zerop (length name))
+                 (string= name "."))
+             (error "Name can't be empty."))
+            (t (cond
+                 ((and (char= (char name 0) #\.)
+                       (not (char= (char (group-name group) 0) #\.)))
+                  (setf (group-number group) (find-free-hidden-group-number
+                                              (current-screen))))
+                 ((and (not (char= (char name 0) #\.))
+                       (char= (char (group-name group) 0) #\.))
+                  (setf (group-number group) (find-free-group-number
+                                              (current-screen)))))
+               (setf (group-name group) name))))))
 
 (defcommand stumpbuffer-create-group (name)
     ((:string "Group name: "))
