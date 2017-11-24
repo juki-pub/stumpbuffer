@@ -29,7 +29,8 @@
 (require 'cl-lib)
 
 (defgroup stumpbuffer nil
-  "A tool to control Stumpwm.")
+  "A tool to control Stumpwm."
+  :version "0.1")
 
 (defcustom stumpbuffer-stumpish-command "stumpish"
   "The name of the command to use to communicate with Stumpwm."
@@ -410,12 +411,12 @@
 
 (defun stumpbuffer-pull-windows ()
   (interactive)
-  (flet ((pull-window (win)
-                      (stumpbuffer-command
-                       "pull-window"
-                       (number-to-string (getf win :group))
-                       (number-to-string (getf (getf win :window-plist)
-                                               :number)))))
+  (cl-flet ((pull-window (win)
+                         (stumpbuffer-command
+                          "pull-window"
+                          (number-to-string (getf win :group))
+                          (number-to-string (getf (getf win :window-plist)
+                                                  :number)))))
     (let (marksp)
       (stumpbuffer-map-marked-windows (lambda (win)
                                         (setq marksp t)
