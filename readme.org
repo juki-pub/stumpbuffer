@@ -27,12 +27,13 @@
   | ~% i~     | Mark all windows with the same instance as the one highlighted     |
   | ~d~       | Mark window to be killed                                           |
   | ~x~       | Execute marks                                                      |
-  | ~D~       | Kill window                                                        |
+  | ~D~       | Kill window or group                                               |
   | ~N~       | Rename window or group                                             |
   | ~P~       | Pull highlighted window or all marked windows to the current frame |
-  | ~RET~     | Focus the window or switch to the group                            |
   | ~T~       | Throw all marked windows to the frame with the highlighted window  |
+  | ~C~       | Create new group                                                   |
   | ~g~       | Update                                                             |
+  | ~RET~     | Focus the window or switch to the group                            |
   | ~TAB~     | Move to the next group                                             |
   | ~BACKTAB~ | Move to the previous group                                         |
   | ~q~       | Quit                                                               |
