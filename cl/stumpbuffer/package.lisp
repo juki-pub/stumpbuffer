@@ -29,5 +29,8 @@
            #:stumpbuffer-throw-window-to-group
            #:stumpbuffer-throw-window
            #:stumpbuffer-focus-window
-           #:stumpbuffer-rename-group))
+           #:stumpbuffer-rename-group
+           #:stumpbuffer-kill-frame
+           #:stumpbuffer-throw-window-to-frame
+           #:stumpbuffer-split-frame))
 
