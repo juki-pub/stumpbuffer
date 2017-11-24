@@ -95,6 +95,7 @@
     (define-key map (kbd "m") 'stumpbuffer-mark-group)
     (define-key map (kbd "u") 'stumpbuffer-unmark-group)
     (define-key map (kbd "RET") 'stumpbuffer-switch-to-group)
+    (define-key map (kbd "T") 'stumpbuffer-throw-marked-windows-to-group)
     (define-key map (kbd "N") 'stumpbuffer-rename-group)
     (define-key map (kbd "D") 'stumpbuffer-kill-group)
     map))
@@ -426,6 +427,18 @@
           (pull-window win)))
       (when stumpbuffer-quit-window-after-command
         (quit-window)))))
+
+(defun stumpbuffer-throw-marked-windows-to-group ()
+  (interactive)
+  (when-let ((group (get-text-property (point) 'stumpbuffer-group-number))
+             (target-group (number-to-string group)))
+    (stumpbuffer-map-marked-windows
+     (lambda (win)
+       (stumpbuffer-command "throw-window-to-group"
+                            (number-to-string (getf win :group))
+                            (number-to-string (getf (getf win :window-plist) :number))
+                            target-group))))
+  (stumpbuffer-update))
 
 (defun stumpbuffer-throw-marked-windows ()
   (interactive)

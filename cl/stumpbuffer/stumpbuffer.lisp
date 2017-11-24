@@ -30,6 +30,17 @@
     (move-window-to-group window (current-group))
     (pull-window window)))
 
+(defcommand stumpbuffer-throw-window-to-group (from-group-num from-window-num
+                                               to-group-num)
+    ((:number "From group number: ")
+     (:number "From window number: ")
+     (:number "To group number: "))
+  (let* ((from-group (find-group-by-number from-group-num))
+         (from-window (find-window-by-group-and-number
+                       from-group from-window-num))
+         (to-group (find-group-by-number to-group-num)))
+    (move-window-to-group from-window to-group)))
+
 (defcommand stumpbuffer-throw-window (from-group-num from-window-num
                                       to-group-num to-window-num)
     ((:number "From group number: ")

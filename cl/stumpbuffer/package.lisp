@@ -24,6 +24,7 @@
            #:stumpbuffer-kill-window
            #:stumpbuffer-switch-to-group
            #:stumpbuffer-create-group
+           #:stumpbuffer-throw-window-to-group
            #:stumpbuffer-throw-window
            #:stumpbuffer-focus-window
            #:stumpbuffer-rename-group))
