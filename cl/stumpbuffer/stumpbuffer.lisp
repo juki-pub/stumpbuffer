@@ -177,7 +177,7 @@
   (with-simple-error-handling
     (let* ((group (find-group-by-number group-num))
            (window (find-window-by-group-and-number group window-num)))
-      (kill-window window))))
+      (delete-window window))))
 
 (defcommand stumpbuffer-kill-frame (group-num frame-num)
     ((:number "Group number: ")
