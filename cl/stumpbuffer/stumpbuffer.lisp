@@ -109,7 +109,7 @@
     (kill-window window)))
 
 (defcommand stumpbuffer-get-data () ()
-  ""
+  "Retrieve information about groups and windows for StumpBuffer."
   (let ((*print-case* :downcase))
     (message
      "~s"
