@@ -5,7 +5,7 @@
 
 * Installing
 
-  Ensure that you have stumpish available. Load ~/emacs/stumpbuffer/~
+  Ensure that you have stumpish available. Load ~emacs/stumpbuffer/~
   in Emacs and ~cl/stumpbuffer/~ in Stumpwm.
 
 * Use
@@ -44,7 +44,7 @@
   Communication with Stumpwm happens through stumpish. Groups are
   identified by their number and windows by a group number and a
   window number. The commands on Stumpwm side are named
-  ~stumpbufer-<command>~.
+  ~stumpbuffer-<command>~.
 
   Use ~stumpbuffer-on-group-name~ to get the highlighted group if the
   point is on a group name. The return value is a plist containing at
