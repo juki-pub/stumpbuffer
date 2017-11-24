@@ -15,7 +15,15 @@
 * Use
 
   Use ~M-x stumpbuffer~ to open the buffer. This should show all
-  groups and windows.
+  groups and windows. ~M-x stumpbuffer-other-frame~ can be used to
+  open the buffer in another frame, which will be killed when exiting
+  the stumpbuffer. Something like ~emacsclient --eval
+  "(stumpbuffer-other-frame)"~ should work to open a stumpbuffer from
+  outside Emacs.
+
+  The customization option ~stumpbuffer-quit-window-after-command~
+  determines whether the buffer should be killed when executing
+  certain commands (such as focusing a window).
 
   | Key       | Command                                                   |
   |-----------+-----------------------------------------------------------|
