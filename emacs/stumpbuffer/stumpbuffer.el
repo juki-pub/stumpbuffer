@@ -552,15 +552,7 @@
     (stumpbuffer-update)))
 
 (defun stumpbuffer-get-data ()
-  (when (get-buffer "*stumpbuffer-data*")
-    (kill-buffer "*stumpbuffer-data*"))
-  (let ((output (get-buffer-create "*stumpbuffer-data*")))
-          (call-process stumpbuffer-stumpish-command
-                        nil output nil
-                        "stumpbuffer-get-data")
-          (let ((m (set-marker (make-marker) 1 output)))
-            (prog1 (read m)
-              (kill-buffer "*stumpbuffer-data*")))))
+  (stumpbuffer-command "get-data"))
 
 (defun stumpbuffer-set-header ()
   (let ((header (with-output-to-string
