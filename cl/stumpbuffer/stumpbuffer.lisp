@@ -111,13 +111,20 @@
 (defcommand stumpbuffer-get-data () ()
   ""
   (let ((*print-case* :downcase))
-    (message "~s"
-             (let ((groups (screen-groups (current-screen))))
-               (sort (mapcar
-                      (lambda (group)
-                        (list :number (group-number group)
-                              :name (group-name group)
-                              :windows (sort (mapcar
+    (message
+     "~s"
+     (let ((groups (screen-groups (current-screen))))
+       (sort
+        (mapcar
+         (lambda (group)
+           (list :number (group-number group)
+                 :name (group-name group)
+                 :frames (sort
+                          (mapcar
+                           (lambda (frame)
+                             (list :number (frame-number frame)
+                                   :windows (sort
+                                             (mapcar
                                               (lambda (window)
                                                 (list :number (window-number window)
                                                       :frame (frame-number
@@ -126,7 +133,9 @@
                                                       :class (window-class window)
                                                       :role (window-role window)
                                                       :instance (window-res window)))
-                                              (group-windows group))
+                                              (frame-windows group frame))
                                              #'< :key (lambda (win) (getf win :number)))))
-                      groups)
-                     #'< :key (lambda (group) (getf group :number)))))))
+                           (group-frames group))
+                          #'< :key (lambda (frame) (getf frame :number)))))
+         groups)
+        #'< :key (lambda (group) (getf group :number)))))))

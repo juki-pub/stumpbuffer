@@ -42,6 +42,11 @@
   :type 'boolean
   :group 'stumpbuffer)
 
+(defcustom stumpbuffer-show-frames-p nil
+  "Should frames be shown?"
+  :type 'boolean
+  :group 'stumpbuffer)
+
 (defcustom stumpbuffer-mode-hook nil
   "Hook run upon entry into `stumpbuffer-mode'."
   :type 'hook
@@ -54,6 +59,11 @@
 
 (defcustom stumpbuffer-group-face 'font-lock-keyword-face
   "Face used for the group name."
+  :type 'face
+  :group 'stumpbuffer)
+
+(defcustom stumpbuffer-frame-face 'font-lock-function-name-face
+  "Face used for the frame name."
   :type 'face
   :group 'stumpbuffer)
 
@@ -86,7 +96,6 @@
     (define-key map (kbd "% R") 'stumpbuffer-mark-by-window-role)
     (define-key map (kbd "% i") 'stumpbuffer-mark-by-window-instance)
     (define-key map (kbd "% g") 'stumpbuffer-mark-current-group)
-    (define-key map (kbd "P") 'stumpbuffer-pull-windows)
     (define-key map (kbd "C") 'stumpbuffer-create-group)
     map))
 
@@ -100,6 +109,10 @@
     (define-key map (kbd "D") 'stumpbuffer-kill-group)
     map))
 
+(defvar stumpbuffer-mode-frame-map
+  (let ((map (make-sparse-keymap)))
+    map))
+
 (defvar stumpbuffer-mode-window-map
   (let ((map (make-sparse-keymap)))
     (define-key map (kbd "m") 'stumpbuffer-mark)
@@ -108,6 +121,7 @@
     (define-key map (kbd "D") 'stumpbuffer-kill-and-update)
     (define-key map (kbd "T") 'stumpbuffer-throw-marked-windows)
     (define-key map (kbd "N") 'stumpbuffer-rename-window)
+    (define-key map (kbd "P") 'stumpbuffer-pull-windows)
     map))
 
 (defvar stumpbuffer-mark-functions
@@ -509,8 +523,28 @@
             stumpbuffer-window-plist ,window-plist))
   (insert "\n"))
 
+(defun stumpbuffer-insert-frame (frame-plist)
+  (destructuring-bind (&key number windows &allow-other-keys)
+      frame-plist
+    (when stumpbuffer-show-frames-p
+      (add-text-properties
+       (point)
+       (progn (insert "Frame " (number-to-string number))
+              (point))
+       `(keymap ,stumpbuffer-mode-frame-map
+                font-lock-face ,stumpbuffer-frame-face
+                stumpbuffer-frame-number ,number
+                stumpbuffer-frame-plist ,frame-plist))
+      (insert "\n"))
+    (unless (null windows)
+      (put-text-property
+       (point)
+       (progn (mapc #'stumpbuffer-insert-window windows)
+              (point))
+       'stumpbuffer-frame number))))
+
 (defun stumpbuffer-insert-group (group-plist)
-  (destructuring-bind (&key number name windows &allow-other-keys)
+  (destructuring-bind (&key number name frames &allow-other-keys)
       group-plist
     (add-text-properties
      (point)
@@ -526,10 +560,10 @@
               stumpbuffer-group-number ,number
               stumpbuffer-group-plist ,group-plist))
     (insert "\n")
-    (unless (null windows)
+    (unless (null frames)
       (put-text-property
        (point)
-       (progn (mapc #'stumpbuffer-insert-window windows)
+       (progn (mapc #'stumpbuffer-insert-frame frames)
               (point))
        'stumpbuffer-group number))))
 

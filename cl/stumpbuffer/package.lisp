@@ -15,7 +15,9 @@
                 #:find-free-group-number
                 #:find-group
                 #:next-group
-                #:non-hidden-groups)
+                #:non-hidden-groups
+                #:frame-windows
+                #:group-frames)
   
   (:export #:stumpbuffer-kill-group
            #:stumpbuffer-get-data
@@ -27,5 +29,6 @@
            #:stumpbuffer-throw-window-to-group
            #:stumpbuffer-throw-window
            #:stumpbuffer-focus-window
-           #:stumpbuffer-rename-group))
+           #:stumpbuffer-rename-group
+           #:stumpbuffer-get-data-with-frames))
 
