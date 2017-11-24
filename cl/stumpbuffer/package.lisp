@@ -29,6 +29,5 @@
            #:stumpbuffer-throw-window-to-group
            #:stumpbuffer-throw-window
            #:stumpbuffer-focus-window
-           #:stumpbuffer-rename-group
-           #:stumpbuffer-get-data-with-frames))
+           #:stumpbuffer-rename-group))
 
