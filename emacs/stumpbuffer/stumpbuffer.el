@@ -315,8 +315,20 @@
                            :number)))
   (stumpbuffer-mark-group group ?D))
 
+(defun stumpbuffer-get-all-window-values (field)
+  (let (result)
+    (stumpbuffer-map-windows (lambda (win)
+                               (when-let ((val (getf (getf win :window-plist)
+                                                     field)))
+                                 (push val result))))
+    result))
+
 (defun stumpbuffer-mark-by-window-class (class mark)
-  (interactive (list (getf (getf (stumpbuffer-on-window) :window-plist) :class)
+  (interactive (list (or (unless current-prefix-arg
+                           (getf (getf (stumpbuffer-on-window) :window-plist)
+                                 :class))
+                         (completing-read "Class: "
+                                          (stumpbuffer-get-all-window-values :class)))
                      ?*))
   (stumpbuffer-map-windows
    (lambda (win)
@@ -324,7 +336,11 @@
        (stumpbuffer-mark mark)))))
 
 (defun stumpbuffer-mark-by-window-role (role mark)
-  (interactive (list (getf (getf (stumpbuffer-on-window) :window-plist) :role)
+  (interactive (list (or (unless current-prefix-arg
+                           (getf (getf (stumpbuffer-on-window) :window-plist)
+                                 :role))
+                         (completing-read "Role: "
+                                          (stumpbuffer-get-all-window-values :role)))
                      ?*))
   (stumpbuffer-map-windows
    (lambda (win)
@@ -332,8 +348,11 @@
        (stumpbuffer-mark mark)))))
 
 (defun stumpbuffer-mark-by-window-instance (instance mark)
-  (interactive (list (getf (getf (stumpbuffer-on-window) :window-plist)
-                           :instance)
+  (interactive (list (or (unless current-prefix-arg
+                           (getf (getf (stumpbuffer-on-window) :window-plist)
+                                 :instance))
+                         (completing-read "Instance: "
+                                          (stumpbuffer-get-all-window-values :instance)))
                      ?*))
   (stumpbuffer-map-windows
    (lambda (win)
