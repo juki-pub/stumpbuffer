@@ -114,6 +114,7 @@
     (define-key map (kbd "m") 'stumpbuffer-mark-frame)
     (define-key map (kbd "u") 'stumpbuffer-unmark-frame)
     (define-key map (kbd "d") 'stumpbuffer-mark-frame-for-kill)
+    (define-key map (kbd "D") 'stumpbuffer-kill-frame)
     (define-key map (kbd "T") 'stumpbuffer-throw-marked-windows-to-frame)
     map))
 
@@ -381,6 +382,15 @@
              (yes-or-no-p "Delete group? "))
     (stumpbuffer-command "kill-group"
                          (number-to-string group))
+    (stumpbuffer-update)))
+
+(defun stumpbuffer-kill-frame (group frame)
+  (interactive (list (get-text-property (point) 'stumpbuffer-group)
+                     (get-text-property (point) 'stumpbuffer-frame-number)))
+  (when (and group frame)
+    (stumpbuffer-command "kill-frame"
+                         (number-to-string group)
+                         (number-to-string frame))
     (stumpbuffer-update)))
 
 (defun stumpbuffer-forward-line ()

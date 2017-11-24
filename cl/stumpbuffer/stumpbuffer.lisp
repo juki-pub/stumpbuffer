@@ -139,6 +139,14 @@
            (window (find-window-by-group-and-number group window-num)))
       (kill-window window))))
 
+(defcommand stumpbuffer-kill-frame (group-num frame-num)
+    ((:number "Group number: ")
+     (:number "Frame number: "))
+  (with-simple-error-handling
+    (let* ((group (find-group-by-number group-num))
+           (frame (find-frame-by-group-and-number group frame-num)))
+      (stumpwm::remove-split group frame))))
+
 (defcommand stumpbuffer-get-data () ()
   "Retrieve information about groups and windows for StumpBuffer."
   (with-simple-error-handling
