@@ -1,12 +1,12 @@
 * StumpBuffer
 
-  An iBuffer inspired tool to control StumpWM from Emacs. Still
+  An IBuffer inspired tool to control Stumpwm from Emacs. Still
   experimental and unstable.
 
 * Installing
 
   Ensure that you have stumpish available. Load ~/emacs/stumpbuffer/~
-  in Emacs and ~cl/stumpbuffer/~ in StumpWM.
+  in Emacs and ~cl/stumpbuffer/~ in Stumpwm.
 
 * Use
 
@@ -41,9 +41,9 @@
 
   Everything is still experimental/unstable.
   
-  Communication with StumpWM happens through stumpish. Groups are
+  Communication with Stumpwm happens through stumpish. Groups are
   identified by their number and windows by a group number and a
-  window number. The commands on StumpWM side are named
+  window number. The commands on Stumpwm side are named
   ~stumpbufer-<command>~.
 
   Use ~stumpbuffer-on-group-name~ to get the highlighted group if the

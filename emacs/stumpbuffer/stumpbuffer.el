@@ -1,4 +1,4 @@
-;;; stumpbuffer.el --- A buffer to control StumpWM
+;;; stumpbuffer.el --- A buffer to control Stumpwm
 
 ;; Copyright (C) 2017 juki
 
@@ -22,17 +22,17 @@
 
 ;;; Commentary:
 
-;; A tool to control StumpWM.
+;; A tool to control Stumpwm.
 
 ;;; Code:
 
 (require 'cl-lib)
 
 (defgroup stumpbuffer nil
-  "A tool to control StumpWM.")
+  "A tool to control Stumpwm.")
 
 (defcustom stumpbuffer-stumpish-command "stumpish"
-  "The name of the command to use to communicate with StumpWM."
+  "The name of the command to use to communicate with Stumpwm."
   :type 'string
   :group 'stumpbuffer)
 
@@ -524,7 +524,7 @@
     (setq buffer-read-only t)))
 
 (define-derived-mode stumpbuffer-mode special-mode "StumpBuffer"
-  "A major mode for controlling StumpWM."
+  "A major mode for controlling Stumpwm."
   (setq buffer-read-only t)
   (buffer-disable-undo)
   (hl-line-mode)
