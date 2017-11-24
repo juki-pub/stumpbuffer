@@ -30,7 +30,7 @@
   | ~D~       | Kill window or group                                               |
   | ~N~       | Rename window or group                                             |
   | ~P~       | Pull highlighted window or all marked windows to the current frame |
-  | ~T~       | Throw all marked windows to the frame with the highlighted window  |
+  | ~T~       | Throw all marked windows to the highlighted window or group        |
   | ~C~       | Create new group                                                   |
   | ~g~       | Update                                                             |
   | ~RET~     | Focus the window or switch to the group                            |
