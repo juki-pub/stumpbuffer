@@ -6,14 +6,12 @@
      (error (e) (message "(:error \"~a\")" e))))
 
 (defun find-group-by-number (num)
-  (dolist (group (screen-groups (current-screen)))
-    (when (= num (group-number group))
-      (return group))))
+  (or (find num (screen-groups (current-screen)) :key #'group-number)
+      (error "No such group.")))
 
 (defun find-window-by-group-and-number (group number)
-  (dolist (window (group-windows group))
-    (when (= number (window-number window))
-      (return window))))
+  (or (find number (group-windows group) :key #'window-number)
+      (error "No such window.")))
 
 (defcommand stumpbuffer-switch-to-group (group-num)
     ((:number "Group number: "))
