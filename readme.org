@@ -4,6 +4,9 @@
   experimental and unstable. Currently Does not work with floating
   groups.
 
+  This uses a lot of Stumpwms internals, and so may or may not work on
+  any given version of Stumpwm.
+
 * Installing
 
   Ensure that you have stumpish available. Load ~emacs/stumpbuffer/~
