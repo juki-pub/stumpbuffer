@@ -227,18 +227,17 @@
 (defun stumpbuffer-unmark-group ()
   "If point is on group, unmark all windows in it."
   (interactive)
-  (when-let ((group (stumpbuffer-on-group-name)))
-    (stumpbuffer-map-group-windows
-     (lambda (win)
-       (stumpbuffer-change-window-mark win nil)))
-    (stumpbuffer-forward-group)))
+  (stumpbuffer-mark-group nil))
+
+(defun stumpbuffer-unmark-frame ()
+  "If point is on group, unmark all windows in it."
+  (interactive)
+  (stumpbuffer-mark-frame nil))
 
 (defun stumpbuffer-unmark ()
   "If point is on a window, unmark it."
   (interactive)
-  (when-let ((win (stumpbuffer-on-window)))
-    (stumpbuffer-change-window-mark win nil)
-    (stumpbuffer-forward-line)))
+  (stumpbuffer-mark nil))
 
 (defun stumpbuffer-unmark-all ()
   "Remove all marks."
