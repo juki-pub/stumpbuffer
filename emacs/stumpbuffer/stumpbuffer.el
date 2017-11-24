@@ -702,14 +702,17 @@
 
 (defun stumpbuffer-update ()
   (interactive)
-  (unwind-protect
-      (progn
-        (setq buffer-read-only nil)
-        (erase-buffer)
-        (stumpbuffer-set-header)
-        (mapc #'stumpbuffer-insert-group (stumpbuffer-get-data)))
-    (setq buffer-read-only t)
-    (goto-char (point-min))))
+  (let ((position (count-lines (point-min) (point))))
+    (unwind-protect
+        (progn
+          (setq buffer-read-only nil)
+          (erase-buffer)
+          (stumpbuffer-set-header)
+          (mapc #'stumpbuffer-insert-group (stumpbuffer-get-data)))
+      (setq buffer-read-only t)
+      (goto-char (point-min))
+      (dotimes (i position)
+        (stumpbuffer-forward-line)))))
 
 (defun stumpbuffer (other-frame-p)
   (interactive (list nil))
