@@ -3,7 +3,7 @@
 (defsystem stumpbuffer
   :author "juki"
   :version "0.1"
-  :license "GPLv3"
+  :license "GPLv2"
 
   :depends-on (:stumpwm)
 
