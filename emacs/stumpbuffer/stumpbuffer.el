@@ -86,6 +86,7 @@
     (define-key map (kbd "% i") 'stumpbuffer-mark-by-window-instance)
     (define-key map (kbd "% g") 'stumpbuffer-mark-current-group)
     (define-key map (kbd "P") 'stumpbuffer-pull-windows)
+    (define-key map (kbd "C") 'stumpbuffer-create-group)
     map))
 
 (defvar stumpbuffer-mode-group-map
@@ -94,6 +95,7 @@
     (define-key map (kbd "u") 'stumpbuffer-unmark-group)
     (define-key map (kbd "RET") 'stumpbuffer-switch-to-group)
     (define-key map (kbd "N") 'stumpbuffer-rename-group)
+    (define-key map (kbd "D") 'stumpbuffer-kill-group)
     map))
 
 (defvar stumpbuffer-mode-window-map
@@ -306,6 +308,22 @@
                                    :title)))
     (stumpbuffer-kill win))
   (stumpbuffer-update))
+
+(defun stumpbuffer-create-group (name)
+  (interactive (list (read-string "New group name: ")))
+  (when name
+    (stumpbuffer-command "create-group"
+                         name)
+    (stumpbuffer-update)))
+
+(defun stumpbuffer-kill-group (group)
+  (interactive (list (getf (getf (stumpbuffer-on-group-name) :group-plist)
+                           :number)))
+  (when (and group
+             (yes-or-no-p "Delete group? "))
+    (stumpbuffer-command "kill-group"
+                         (number-to-string group))
+    (stumpbuffer-update)))
 
 (defun stumpbuffer-forward-line ()
   (interactive)

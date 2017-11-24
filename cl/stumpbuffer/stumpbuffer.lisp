@@ -66,6 +66,22 @@
                                             (current-screen)))))
              (setf (group-name group) name)))))
 
+(defcommand stumpbuffer-create-group (name)
+    ((:string "Group name: "))
+  (add-group (current-screen) name :background t))
+
+(defcommand stumpbuffer-kill-group (group-num)
+    ((:number "Group number: "))
+  (let* ((groups (screen-groups (current-screen)))
+         (group (find-group-by-number group-num))
+         (to-group (if (eq group (current-group))
+                       (or (next-group group (non-hidden-groups groups))
+                           (next-group group groups))
+                       (current-group))))
+    (if (null to-group)
+        (message "Only one group left.")
+        (kill-group group to-group))))
+
 (defcommand stumpbuffer-rename-window (group-num window-num new-name)
     ((:number "Group number: ")
      (:number "Window number: ")
