@@ -114,6 +114,7 @@
     (define-key map (kbd "m") 'stumpbuffer-mark-frame)
     (define-key map (kbd "u") 'stumpbuffer-unmark-frame)
     (define-key map (kbd "d") 'stumpbuffer-mark-frame-for-kill)
+    (define-key map (kbd "T") 'stumpbuffer-throw-marked-windows-to-frame)
     map))
 
 (defvar stumpbuffer-mode-window-map
@@ -518,6 +519,21 @@
                             (number-to-string (getf win :group))
                             (number-to-string (getf (getf win :window-plist) :number))
                             target-group))))
+  (stumpbuffer-update))
+
+(defun stumpbuffer-throw-marked-windows-to-frame ()
+  (interactive)
+  (when-let ((group (get-text-property (point) 'stumpbuffer-group))
+             (target-group (number-to-string group))
+             (frame (get-text-property (point) 'stumpbuffer-frame-number))
+             (target-frame (number-to-string frame)))
+    (stumpbuffer-map-marked-windows
+     (lambda (win)
+       (stumpbuffer-command "throw-window-to-frame"
+                            (number-to-string (getf win :group))
+                            (number-to-string (getf (getf win :window-plist) :number))
+                            target-group
+                            target-frame))))
   (stumpbuffer-update))
 
 (defun stumpbuffer-throw-marked-windows ()

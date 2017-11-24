@@ -13,6 +13,10 @@
   (or (find number (group-windows group) :key #'window-number)
       (error "No such window.")))
 
+(defun find-frame-by-group-and-number (group number)
+  (or (find number (group-frames group) :key #'frame-number)
+      (error "No such frame.")))
+
 (defcommand stumpbuffer-switch-to-group (group-num)
     ((:number "Group number: "))
   (let ((group (find-group-by-number group-num)))
@@ -43,6 +47,21 @@
                        from-group from-window-num))
          (to-group (find-group-by-number to-group-num)))
     (move-window-to-group from-window to-group)))
+
+(defcommand stumpbuffer-throw-window-to-frame (from-group-num from-window-num
+                                               to-group-num to-frame-num)
+    ((:number "From group number: ")
+     (:number "From window number: ")
+     (:number "To group number: ")
+     (:number "To frame number: "))
+  (with-simple-error-handling
+    (let* ((from-group (find-group-by-number from-group-num))
+           (from-window (find-window-by-group-and-number
+                         from-group from-window-num))
+           (to-group (find-group-by-number to-group-num))
+           (to-frame (find-frame-by-group-and-number to-group to-frame-num)))
+      (move-window-to-group from-window to-group)
+      (pull-window from-window to-frame))))
 
 (defcommand stumpbuffer-throw-window (from-group-num from-window-num
                                       to-group-num to-window-num)
