@@ -28,7 +28,7 @@
   (let* ((group (find-group-by-number group-num))
          (window (find-window-by-group-and-number group window-num)))
     (move-window-to-group window (current-group))
-    (stumpwm::pull-window window)))
+    (pull-window window)))
 
 (defcommand stumpbuffer-throw-window (from-group-num from-window-num
                                       to-group-num to-window-num)
@@ -43,14 +43,14 @@
          (to-window (find-window-by-group-and-number
                      to-group to-window-num)))
     (move-window-to-group from-window to-group)
-    (stumpwm::pull-window from-window (stumpwm::window-frame to-window))))
+    (pull-window from-window (window-frame to-window))))
 
 (defcommand stumpbuffer-rename-group (group-num name)
     ((:number "Group number: ")
      (:string "New name: "))
   (let* ((group (find-group-by-number group-num)))
     ;; This is largely copied from the standard GRENAME command.
-    (cond ((stumpwm::find-group (current-screen) name)
+    (cond ((find-group (current-screen) name)
            (message "Name already exists."))
           ((or (zerop (length name))
                (string= name "."))
@@ -58,11 +58,11 @@
           (t (cond
                ((and (char= (char name 0) #\.)
                      (not (char= (char (group-name group) 0) #\.)))
-                (setf (group-number group) (stumpwm::find-free-hidden-group-number
+                (setf (group-number group) (find-free-hidden-group-number
                                             (current-screen))))
                ((and (not (char= (char name 0) #\.))
                      (char= (char (group-name group) 0) #\.))
-                (setf (group-number group) (stumpwm::find-free-group-number
+                (setf (group-number group) (find-free-group-number
                                             (current-screen)))))
              (setf (group-name group) name)))))
 
@@ -109,9 +109,9 @@
                               :windows (sort (mapcar
                                               (lambda (window)
                                                 (list :number (window-number window)
-                                                      :frame (stumpwm::frame-number
-                                                              (stumpwm::window-frame window))
-                                                      :title (stumpwm::window-name window)
+                                                      :frame (frame-number
+                                                              (window-frame window))
+                                                      :title (window-name window)
                                                       :class (window-class window)
                                                       :role (window-role window)
                                                       :instance (window-res window)))
