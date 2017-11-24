@@ -728,7 +728,7 @@
   (unwind-protect
       (progn
         (setq buffer-read-only nil)
-        (run-hooks 'stumpbuffer-hook))
+        (run-hooks 'stumpbuffer-mode-hook))
     (setq buffer-read-only t)))
 
 (defun stumpbuffer-other-frame ()
