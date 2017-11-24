@@ -132,8 +132,18 @@
   "An alist of mark character to functions to execute the mark.")
 
 (defun stumpbuffer-command (command &rest args)
-  (apply #'call-process stumpbuffer-stumpish-command
-         nil nil nil (concat "stumpbuffer-" command) args))
+  (let ((output (get-buffer-create "*stumpbuffer-data*")))
+    (apply #'call-process stumpbuffer-stumpish-command
+           nil output nil
+           (concat "stumpbuffer-" command) args)
+    (unless (zerop (buffer-size output))
+      (let ((m (set-marker (make-marker) 1 output)))
+        (when-let (result (prog1 (read m)
+                            (kill-buffer "*stumpbuffer-data*")))
+          (if (and (listp result)
+                   (eql :error (first result)))
+              (error "StumpBuffer error: %s" (second result))
+            result))))))
 
 (defun stumpbuffer-on-group-name ()
   "If point is on a group name, return info about it."

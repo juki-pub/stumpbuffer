@@ -1,5 +1,10 @@
 (in-package #:stumpbuffer)
 
+(defmacro with-simple-error-handling (&body body)
+  `(handler-case
+       (progn ,@body)
+     (error (e) (message "(:error \"~a\")" e))))
+
 (defun find-group-by-number (num)
   (dolist (group (screen-groups (current-screen)))
     (when (= num (group-number group))
