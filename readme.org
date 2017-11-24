@@ -41,4 +41,6 @@
   | ~P~       | Pull (move marked windows here)                           |
   | ~T~       | Throw (move marked windows there)                         |
   | ~q~       | Quit                                                      |
+  | ~s~       | Split frame vertically (only when point on frame name)    |
+  | ~S~       | Split frame horizontally (only when point on frame name)  |
 
