@@ -17,8 +17,9 @@
   (or (find number (group-frames group) :key #'frame-number)
       (error "No such frame.")))
 
-;; This is just a copy of the same function in STUMPWM, except that it
-;; takes the frame as an argument instead of using the current frame.
+;; This is just copy/paste of the same function in STUMPWM, except
+;; that this takes the frame as an argument instead of using the
+;; current frame.
 (defun split-frame (group frame how &optional (ratio 1/2))
   (check-type how (member :row :column))
   (let ((head (stumpwm::frame-head group frame)))
@@ -34,14 +35,15 @@
         (setf (stumpwm::tile-group-frame-head group head)
               (if (atom (stumpwm::tile-group-frame-head group head))
                   (list f1 f2)
-                  (stumpwm::funcall-on-node (stumpwm::tile-group-frame-head group head)
-                                   (lambda (tree)
-                                     (if (eq (stumpwm::tree-split-type tree) how)
-                                         (stumpwm::list-splice-replace frame tree f1 f2)
-                                         (substitute (list f1 f2) frame tree)))
-                                   (lambda (tree)
-                                     (unless (atom tree)
-                                       (find frame tree))))))
+                  (stumpwm::funcall-on-node
+                   (stumpwm::tile-group-frame-head group head)
+                   (lambda (tree)
+                     (if (eq (stumpwm::tree-split-type tree) how)
+                         (stumpwm::list-splice-replace frame tree f1 f2)
+                         (substitute (list f1 f2) frame tree)))
+                   (lambda (tree)
+                     (unless (atom tree)
+                       (find frame tree))))))
         (stumpwm::migrate-frame-windows group frame f1)
         (stumpwm::choose-new-frame-window f2 group)
         (if (eq (stumpwm::tile-group-current-frame group)
@@ -157,7 +159,7 @@
                              (next-group group groups))
                          (current-group))))
       (if (null to-group)
-          (message "Only one group left.")
+          (error "Only one group left.")
           (kill-group group to-group)))))
 
 (defcommand stumpbuffer-rename-window (group-num window-num new-name)
@@ -196,6 +198,8 @@ respectively."
   (with-simple-error-handling
     (let* ((group (find-group-by-number group-num))
            (frame (find-frame-by-group-and-number group frame-num)))
+      ;; Same as STUMPWM::SPLIT-FRAME-IN-DIR, but that doesn't take
+      ;; the frame as an argument.
       (if (split-frame group frame
                        (ecase direction
                          (1 :column)
@@ -207,33 +211,34 @@ respectively."
 
 (defcommand stumpbuffer-get-data () ()
   "Retrieve information about groups and windows for StumpBuffer."
-  (with-simple-error-handling
-    (let ((*print-case* :downcase))
-      (message
-       "~s"
-       (let ((groups (screen-groups (current-screen))))
-         (sort
-          (mapcar
-           (lambda (group)
-             (list :number (group-number group)
-                   :name (group-name group)
-                   :frames (sort
-                            (mapcar
-                             (lambda (frame)
-                               (list :number (frame-number frame)
-                                     :windows (sort
-                                               (mapcar
-                                                (lambda (window)
-                                                  (list :number (window-number window)
-                                                        :frame (frame-number
-                                                                (window-frame window))
-                                                        :title (window-name window)
-                                                        :class (window-class window)
-                                                        :role (window-role window)
-                                                        :instance (window-res window)))
-                                                (frame-windows group frame))
-                                               #'< :key (lambda (win) (getf win :number)))))
-                             (group-frames group))
-                            #'< :key (lambda (frame) (getf frame :number)))))
-           groups)
-          #'< :key (lambda (group) (getf group :number))))))))
+  (flet ((number (plist) (getf plist :number)))
+    (with-simple-error-handling
+      (let ((*print-case* :downcase))
+        (message
+         "~s"
+         (let ((groups (screen-groups (current-screen))))
+           (sort
+            (mapcar
+             (lambda (group)
+               (list :number (group-number group)
+                     :name (group-name group)
+                     :frames (sort
+                              (mapcar
+                               (lambda (frame)
+                                 (list :number (frame-number frame)
+                                       :windows (sort
+                                                 (mapcar
+                                                  (lambda (window)
+                                                    (list :number (window-number window)
+                                                          :frame (frame-number
+                                                                  (window-frame window))
+                                                          :title (window-name window)
+                                                          :class (window-class window)
+                                                          :role (window-role window)
+                                                          :instance (window-res window)))
+                                                  (frame-windows group frame))
+                                                 #'< :key #'number)))
+                               (group-frames group))
+                              #'< :key #'number)))
+             groups)
+            #'< :key #'number)))))))
