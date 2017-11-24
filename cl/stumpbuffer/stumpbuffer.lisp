@@ -17,6 +17,44 @@
   (or (find number (group-frames group) :key #'frame-number)
       (error "No such frame.")))
 
+;; This is just a copy of the same function in STUMPWM, except that it
+;; takes the frame as an argument instead of using the current frame.
+(defun split-frame (group frame how &optional (ratio 1/2))
+  (check-type how (member :row :column))
+  (let ((head (stumpwm::frame-head group frame)))
+    ;; don't create frames smaller than the minimum size
+    (when (or (and (eq how :row)
+                   (>= (frame-height frame) (* *min-frame-height* 2)))
+              (and (eq how :column)
+                   (>= (frame-width frame) (* *min-frame-width* 2))))
+      (multiple-value-bind (f1 f2) (funcall (if (eq how :column)
+                                                'stumpwm::split-frame-h
+                                                'stumpwm::split-frame-v)
+                                            group frame ratio)
+        (setf (stumpwm::tile-group-frame-head group head)
+              (if (atom (stumpwm::tile-group-frame-head group head))
+                  (list f1 f2)
+                  (stumpwm::funcall-on-node (stumpwm::tile-group-frame-head group head)
+                                   (lambda (tree)
+                                     (if (eq (stumpwm::tree-split-type tree) how)
+                                         (stumpwm::list-splice-replace frame tree f1 f2)
+                                         (substitute (list f1 f2) frame tree)))
+                                   (lambda (tree)
+                                     (unless (atom tree)
+                                       (find frame tree))))))
+        (stumpwm::migrate-frame-windows group frame f1)
+        (stumpwm::choose-new-frame-window f2 group)
+        (if (eq (stumpwm::tile-group-current-frame group)
+                frame)
+            (setf (stumpwm::tile-group-current-frame group) f1))
+        (setf (stumpwm::tile-group-last-frame group) f2)
+        (stumpwm::sync-frame-windows group f1)
+        (stumpwm::sync-frame-windows group f2)
+        ;; we also need to show the new window in the other frame
+        (when (stumpwm::frame-window f2)
+          (stumpwm::unhide-window (stumpwm::frame-window f2)))
+        (frame-number f2)))))
+
 (defcommand stumpbuffer-switch-to-group (group-num)
     ((:number "Group number: "))
   (with-simple-error-handling
