@@ -13,60 +13,28 @@
   Use ~M-x stumpbuffer~ to open the buffer. This should show all
   groups and windows.
 
-  | Key       | Command                                                            |
-  |-----------+--------------------------------------------------------------------|
-  | ~n~       | Move to next line (wrapping)                                       |
-  | ~p~       | Move to previous line (wrapping)                                   |
-  | ~m~       | Mark current window or the whole group                             |
-  | ~u~       | Unmark current window or the whole group                           |
-  | ~U~       | Unmark everything                                                  |
-  | ~% r~     | Mark windows whose title matches a regex                           |
-  | ~% R~     | Mark all windows with the same role as the one highlighted         |
-  | ~% c~     | Mark all windows with the same class as the one highlighted        |
-  | ~% f~     | Mark all windows in the same frame as the highlighted window       |
-  | ~% i~     | Mark all windows with the same instance as the one highlighted     |
-  | ~d~       | Mark window to be killed                                           |
-  | ~x~       | Execute marks                                                      |
-  | ~D~       | Kill window or group                                               |
-  | ~N~       | Rename window or group                                             |
-  | ~P~       | Pull highlighted window or all marked windows to the current frame |
-  | ~T~       | Throw all marked windows to the highlighted window or group        |
-  | ~C~       | Create new group                                                   |
-  | ~g~       | Update                                                             |
-  | ~RET~     | Focus the window or switch to the group                            |
-  | ~TAB~     | Move to the next group                                             |
-  | ~BACKTAB~ | Move to the previous group                                         |
-  | ~q~       | Quit                                                               |
+  | Key       | Command                                                   |
+  |-----------+-----------------------------------------------------------|
+  | ~n~       | Move to next line                                         |
+  | ~p~       | Move to previous line                                     |
+  | ~TAB~     | Move to next group                                        |
+  | ~BACKTAB~ | Move to previous group                                    |
+  | ~g~       | Update                                                    |
+  | ~RET~     | Focus and switch to                                       |
+  | ~m~       | Mark                                                      |
+  | ~u~       | Unmark                                                    |
+  | ~U~       | Unmark all                                                |
+  | ~% r~     | Mark windows whose title matches a regex                  |
+  | ~% R~     | Mark windows with the same role as the curent window      |
+  | ~% c~     | Mark windows with the same class as the current window    |
+  | ~% f~     | Mark windows in the same frame as the current window      |
+  | ~% i~     | Mark windows with the same instance as the current window |
+  | ~% g~     | Mark windows in the same group as the current window      |
+  | ~d~       | Mark for kill                                             |
+  | ~x~       | Execute marks                                             |
+  | ~D~       | Kill                                                      |
+  | ~N~       | Rename                                                    |
+  | ~P~       | Pull (move marked windows here)                           |
+  | ~T~       | Throw (move marked windows there)                         |
+  | ~q~       | Quit                                                      |
 
-* Extending
-
-  Everything is still experimental/unstable.
-  
-  Communication with Stumpwm happens through stumpish. Groups are
-  identified by their number and windows by a group number and a
-  window number. The commands on Stumpwm side are named
-  ~stumpbuffer-<command>~.
-
-  Use ~stumpbuffer-on-group-name~ to get the highlighted group if the
-  point is on a group name. The return value is a plist containing at
-  least keys ~:start~, ~:end~ and ~:group-plist~. Start and end are
-  the character positions in the buffer. The group plist contains info
-  about the group (at least ~:number~, ~:name~ and ~:windows~).
-
-  ~stumpbuffer-on-window~ returns information about the current window
-  if the point is on one. It returns a plist containing keys ~:start~,
-  ~:end~, ~:group~ (the number of the group the window is in) and
-  ~:window-plist~. It may also contain a key ~:mark~ if the window is
-  marked. The window plist contains at least ~:number~, ~:title~,
-  ~:class~, ~:role~, ~:instance~ and ~:frame~.
-  
-  Use ~stumpbuffer-map-groups~, ~stumpbuffer-map-windows~,
-  ~stumpbuffer-map-group-windows~ or ~stumpbuffer-map-marked-windows~
-  to process windows. They all take function of one argument and call
-  it on each relevant window or group row.
-
-  ~stumpbuffer-mark~ and ~stumpbuffer-unmark~ can be used to add or
-  remove marks on windows. The variable ~stumpbuffer-mark-functions~
-  is an alist mapping mark characters to functions to execute the mark
-  with the ~x~-key (eg. ~((?D . stumpbuffer-kill))~).
-  
