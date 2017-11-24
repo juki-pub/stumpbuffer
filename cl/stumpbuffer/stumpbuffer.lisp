@@ -185,6 +185,26 @@
            (frame (find-frame-by-group-and-number group frame-num)))
       (stumpwm::remove-split group frame))))
 
+(defcommand stumpbuffer-split-frame (group-num frame-num direction)
+    ((:number "Group number: ")
+     (:number "Frame number: ")
+     (:number "Direction: "))
+  "Split a frame. 
+
+DIRECTION can be 1 or 2, corresponding to column and row
+respectively."
+  (with-simple-error-handling
+    (let* ((group (find-group-by-number group-num))
+           (frame (find-frame-by-group-and-number group frame-num)))
+      (if (split-frame group frame
+                       (ecase direction
+                         (1 :column)
+                         (2 :row))
+                       1/2)
+          (when (stumpwm::frame-window frame)
+            (update-decoration (stumpwm::frame-window frame)))
+          (error "Cannot split smaller than minimum size.")))))
+
 (defcommand stumpbuffer-get-data () ()
   "Retrieve information about groups and windows for StumpBuffer."
   (with-simple-error-handling

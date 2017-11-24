@@ -116,6 +116,8 @@
     (define-key map (kbd "d") 'stumpbuffer-mark-frame-for-kill)
     (define-key map (kbd "D") 'stumpbuffer-kill-frame)
     (define-key map (kbd "T") 'stumpbuffer-throw-marked-windows-to-frame)
+    (define-key map (kbd "s") 'stumpbuffer-split-frame-vertical)
+    (define-key map (kbd "S") 'stumpbuffer-split-frame-horizontal)
     map))
 
 (defvar stumpbuffer-mode-window-map
@@ -391,6 +393,26 @@
     (stumpbuffer-command "kill-frame"
                          (number-to-string group)
                          (number-to-string frame))
+    (stumpbuffer-update)))
+
+(defun stumpbuffer-split-frame-vertical (group frame)
+  (interactive (list (get-text-property (point) 'stumpbuffer-group)
+                     (get-text-property (point) 'stumpbuffer-frame-number)))
+  (when (and group frame)
+    (stumpbuffer-command "split-frame"
+                         (number-to-string group)
+                         (number-to-string frame)
+                         "2")
+    (stumpbuffer-update)))
+
+(defun stumpbuffer-split-frame-horizontal (group frame)
+  (interactive (list (get-text-property (point) 'stumpbuffer-group)
+                     (get-text-property (point) 'stumpbuffer-frame-number)))
+  (when (and group frame)
+    (stumpbuffer-command "split-frame"
+                         (number-to-string group)
+                         (number-to-string frame)
+                         "1")
     (stumpbuffer-update)))
 
 (defun stumpbuffer-forward-line ()
