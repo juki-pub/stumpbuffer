@@ -885,6 +885,13 @@ Kills the frame if necessary."
     (delete-frame)))
 
 (defun stumpbuffer (other-frame-p kill-frame-p)
+  "Open a StumpBuffer.
+
+If other-frame-p is true, open in another frame. If kill-frame-p
+is true, the frame will be killed upon exiting the buffer.
+
+Something like `emacsclient -c --eval \"(stumpbuffer nil t)\"`
+can be used to open a buffer from outside emacs."
   (interactive (list nil nil))
   (let ((buffer (get-buffer-create "*StumpBuffer*")))
     (if other-frame-p
