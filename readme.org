@@ -1,7 +1,7 @@
 * StumpBuffer
 
   An IBuffer inspired tool to control Stumpwm from Emacs. Still
-  experimental and unstable. Currently does not work with floating
+  experimental and unstable. Currently does not work with float
   groups.
 
   Uses a lot of Stumpwms internals. This can't really be avoided since

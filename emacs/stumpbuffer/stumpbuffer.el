@@ -830,8 +830,8 @@ With a prefix argument this also focuses the window."
               (when name
                 (insert name))
               (insert " ]")
-              (when (eql type :floating)
-                (insert " Floating groups don't work yet!"))
+              (when (eql type :float)
+                (insert " Float groups don't work yet!"))
               (point))
        `(keymap ,stumpbuffer-mode-group-map
                 face ,stumpbuffer-group-face

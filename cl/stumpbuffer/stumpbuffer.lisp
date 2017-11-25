@@ -236,8 +236,8 @@ respectively."
                     (process-custom-fields *frame-data-fields* group frame)))
            (group-plist (group)
              (let ((type (if (typep group 'float-group)
-                             :floating
-                             :tiling)))
+                             :float
+                             :tile)))
                (list* :number (group-number group)
                       :name (group-name group)
                       :type type
