@@ -241,7 +241,7 @@ respectively."
                (list* :number (group-number group)
                       :name (group-name group)
                       :type type
-                      :frames (if (eql type :tiling)
+                      :frames (if (eql type :tile)
                                   (sort (mapcar (lambda (frame)
                                                   (frame-plist group frame))
                                                 (group-frames group))
