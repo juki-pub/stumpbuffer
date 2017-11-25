@@ -7,18 +7,39 @@
   ;; really be avoided since we have to be able to control things that
   ;; aren't exposed by stumpwm.
   (:import-from #:stumpwm
-                #:pull-window
-                #:window-frame
-                #:window-name
-                #:frame-number
-                #:kill-group
-                #:find-free-hidden-group-number
+                #:choose-new-frame-window
                 #:find-free-group-number
+                #:find-free-hidden-group-number
                 #:find-group
+                #:float-group
+                #:focus-frame
+                #:frame-head
+                #:frame-number
+                #:frame-window
+                #:frame-windows
+                #:funcall-on-node
+                #:group-frames
+                #:kill-group
+                #:list-splice-replace
+                #:migrate-frame-windows
                 #:next-group
                 #:non-hidden-groups
-                #:frame-windows
-                #:group-frames)
+                #:pull-window
+                #:remove-split
+                #:split-frame-h
+                #:split-frame-v
+                #:sync-frame-windows
+                #:tile-group-current-frame
+                #:tile-group-frame-head
+                #:tile-group-last-frame
+                #:tree-split-type
+                #:unhide-window
+                #:window-by-id
+                #:window-frame
+                #:window-hidden-p
+                #:window-id
+                #:window-name
+                )
   
   (:export #:*window-data-fields*
            #:*frame-data-fields*

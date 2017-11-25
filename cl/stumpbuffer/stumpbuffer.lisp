@@ -14,7 +14,7 @@
       (error "No such frame.")))
 
 (defun find-window-by-id (id)
-  (or (stumpwm::window-by-id id)
+  (or (window-by-id id)
       (error "No such window.")))
 
 ;; This is just copy/paste of the same function in STUMPWM, except
@@ -22,39 +22,39 @@
 ;; current frame.
 (defun split-frame (group frame how &optional (ratio 1/2))
   (check-type how (member :row :column))
-  (let ((head (stumpwm::frame-head group frame)))
+  (let ((head (frame-head group frame)))
     ;; don't create frames smaller than the minimum size
     (when (or (and (eq how :row)
                    (>= (frame-height frame) (* *min-frame-height* 2)))
               (and (eq how :column)
                    (>= (frame-width frame) (* *min-frame-width* 2))))
       (multiple-value-bind (f1 f2) (funcall (if (eq how :column)
-                                                'stumpwm::split-frame-h
-                                                'stumpwm::split-frame-v)
+                                                'split-frame-h
+                                                'split-frame-v)
                                             group frame ratio)
-        (setf (stumpwm::tile-group-frame-head group head)
-              (if (atom (stumpwm::tile-group-frame-head group head))
+        (setf (tile-group-frame-head group head)
+              (if (atom (tile-group-frame-head group head))
                   (list f1 f2)
-                  (stumpwm::funcall-on-node
-                   (stumpwm::tile-group-frame-head group head)
+                  (funcall-on-node
+                   (tile-group-frame-head group head)
                    (lambda (tree)
-                     (if (eq (stumpwm::tree-split-type tree) how)
-                         (stumpwm::list-splice-replace frame tree f1 f2)
+                     (if (eq (tree-split-type tree) how)
+                         (list-splice-replace frame tree f1 f2)
                          (substitute (list f1 f2) frame tree)))
                    (lambda (tree)
                      (unless (atom tree)
                        (find frame tree))))))
-        (stumpwm::migrate-frame-windows group frame f1)
-        (stumpwm::choose-new-frame-window f2 group)
-        (if (eq (stumpwm::tile-group-current-frame group)
+        (migrate-frame-windows group frame f1)
+        (choose-new-frame-window f2 group)
+        (if (eq (tile-group-current-frame group)
                 frame)
-            (setf (stumpwm::tile-group-current-frame group) f1))
-        (setf (stumpwm::tile-group-last-frame group) f2)
-        (stumpwm::sync-frame-windows group f1)
-        (stumpwm::sync-frame-windows group f2)
+            (setf (tile-group-current-frame group) f1))
+        (setf (tile-group-last-frame group) f2)
+        (sync-frame-windows group f1)
+        (sync-frame-windows group f2)
         ;; we also need to show the new window in the other frame
-        (when (stumpwm::frame-window f2)
-          (stumpwm::unhide-window (stumpwm::frame-window f2)))
+        (when (frame-window f2)
+          (unhide-window (frame-window f2)))
         (frame-number f2)))))
 
 (defcommand stumpbuffer-switch-to-group (group-num)
@@ -68,7 +68,7 @@
   (with-simple-error-handling
     (let ((g (find-group-by-number group-num)))
       (gselect g)
-      (stumpwm::focus-frame g (find-frame-by-group-and-number g frame-num)))))
+      (focus-frame g (find-frame-by-group-and-number g frame-num)))))
 
 (defcommand stumpbuffer-focus-window (group-num window-id)
     ((:number "Group number: ")
@@ -180,7 +180,7 @@
   (with-simple-error-handling
     (let* ((group (find-group-by-number group-num))
            (frame (find-frame-by-group-and-number group frame-num)))
-      (stumpwm::remove-split group frame))))
+      (remove-split group frame))))
 
 (defcommand stumpbuffer-split-frame (group-num frame-num direction)
     ((:number "Group number: ")
@@ -200,8 +200,8 @@ respectively."
                          (1 :column)
                          (2 :row))
                        1/2)
-          (when (stumpwm::frame-window frame)
-            (update-decoration (stumpwm::frame-window frame)))
+          (when (frame-window frame)
+            (update-decoration (frame-window frame)))
           (error "Cannot split smaller than minimum size.")))))
 
 (defvar *window-data-fields* nil)
@@ -224,8 +224,8 @@ respectively."
                     :class (window-class window)
                     :role (window-role window)
                     :instance (window-res window)
-                    :id (stumpwm::window-id window)
-                    :hiddenp (stumpwm::window-hidden-p window)
+                    :id (window-id window)
+                    :hiddenp (window-hidden-p window)
                     (process-custom-fields *window-data-fields* window)))
            (frame-plist (group frame)
              (list* :number (frame-number frame)
@@ -234,7 +234,7 @@ respectively."
                               #'< :key #'number)
                     (process-custom-fields *frame-data-fields* group frame)))
            (group-plist (group)
-             (let ((type (if (typep group 'stumpwm::float-group)
+             (let ((type (if (typep group 'float-group)
                              :floating
                              :tiling)))
                (list* :number (group-number group)
