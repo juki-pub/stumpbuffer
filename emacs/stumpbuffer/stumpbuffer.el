@@ -777,13 +777,14 @@ With a prefix argument this also focuses the window."
                        (len (length entry)))
                   (insert (if width
                               (if (> len width)
-                                  (store-substring (make-string width ?.)
-                                                   0
-                                                   (substring entry 0
-                                                              (- width 3)))
-                                (store-substring (make-string width ?\s)
-                                                 0
-                                                 (substring entry 0 len)))
+                                  (format (concat "%-"
+                                                  (number-to-string (- width 3))
+                                                  "."
+                                                  (number-to-string (- width 3))
+                                                  "s...")
+                                          entry)
+                                (format (concat "%-" (number-to-string width) "s")
+                                        entry))
                             entry))))
               (insert " "))
             (point))
