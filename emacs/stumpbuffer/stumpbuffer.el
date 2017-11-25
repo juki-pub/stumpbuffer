@@ -717,17 +717,30 @@
 
 (defun stumpbuffer-update ()
   (interactive)
-  (let ((position (count-lines (point-min) (point))))
-    (unwind-protect
-        (progn
-          (setq buffer-read-only nil)
-          (erase-buffer)
-          (stumpbuffer-set-header)
-          (mapc #'stumpbuffer-insert-group (stumpbuffer-get-data)))
-      (setq buffer-read-only t)
-      (goto-char (point-min))
-      (dotimes (i position)
-        (stumpbuffer-forward-line)))))
+  (let (active-marks)
+    (stumpbuffer-map-windows
+     (lambda (win)
+       (when-let ((mark (getf win :mark)))
+         (push (cons (getf (getf win :window-plist) :id)
+                     mark)
+               active-marks))))
+    (let ((position (count-lines (point-min) (point))))
+      (unwind-protect
+          (progn
+            (setq buffer-read-only nil)
+            (erase-buffer)
+            (stumpbuffer-set-header)
+            (mapc #'stumpbuffer-insert-group (stumpbuffer-get-data)))
+        (setq buffer-read-only t)
+        (when active-marks
+          (stumpbuffer-map-windows
+           (lambda (win)
+             (when-let ((id (getf (getf win :window-plist) :id))
+                        (mark (cdr (assoc id active-marks))))
+               (stumpbuffer-mark mark)))))
+        (goto-char (point-min))
+        (dotimes (i position)
+          (stumpbuffer-forward-line))))))
 
 (defun stumpbuffer (other-frame-p kill-frame-p)
   (interactive (list nil nil))
