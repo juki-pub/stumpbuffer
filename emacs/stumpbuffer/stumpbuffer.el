@@ -73,6 +73,8 @@
   :type 'face
   :group 'stumpbuffer)
 
+(defvar stumpbuffer-kill-frame-on-exit-p nil)
+
 (defvar stumpbuffer-window-format '((:number 3 "N")
                                     (:title 35 "Title")
                                     (:class 10 "Class")
