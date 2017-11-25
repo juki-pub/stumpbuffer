@@ -759,11 +759,7 @@
   (setq stumpbuffer-kill-frame-on-exit-p kill-frame-p)
   (stumpbuffer-mode)
   (stumpbuffer-update)
-  (unwind-protect
-      (progn
-        (setq buffer-read-only nil)
-        (run-hooks 'stumpbuffer-mode-hook))
-    (setq buffer-read-only t)))
+  (setq buffer-read-only t))
 
 (defun stumpbuffer-other-frame ()
   (interactive)
@@ -774,7 +770,9 @@
   (setq buffer-read-only t)
   (buffer-disable-undo)
   (hl-line-mode)
-  (set (make-local-variable 'stumpbuffer-kill-frame-on-exit-p) nil))
+  (set (make-local-variable 'stumpbuffer-kill-frame-on-exit-p) nil)
+  (make-local-variable 'stumpbuffer-group-filters)
+  (make-local-variable 'stumpbuffer-window-filters))
 
 
 ;;; Filter utilities
