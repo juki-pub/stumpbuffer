@@ -3,7 +3,10 @@
 (defmacro with-simple-error-handling (&body body)
   `(handler-case
        (progn ,@body)
-     (error (e) (message "(:error \"~a\")" e))))
+     (error (e) (message "(:error \"~a\")"
+                         ;; Very simple escaping... TODO something better.
+                         (ppcre:regex-replace-all "\"" (princ-to-string e)
+                                                  "\\\"")))))
 
 (defun find-group-by-number (num)
   (or (find num (screen-groups (current-screen)) :key #'group-number)
