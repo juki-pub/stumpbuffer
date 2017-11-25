@@ -9,10 +9,6 @@
   (or (find num (screen-groups (current-screen)) :key #'group-number)
       (error "No such group.")))
 
-(defun find-window-by-group-and-number (group number)
-  (or (find number (group-windows group) :key #'window-number)
-      (error "No such window.")))
-
 (defun find-frame-by-group-and-number (group number)
   (or (find number (group-frames group) :key #'frame-number)
       (error "No such frame.")))
