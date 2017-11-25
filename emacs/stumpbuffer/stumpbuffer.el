@@ -567,22 +567,27 @@
     (when stumpbuffer-quit-window-after-command
       (stumpbuffer-quit-window))))
 
-(defun stumpbuffer-pull-windows ()
-  (interactive)
+(defun stumpbuffer-pull-windows (&optional window)
+  (interactive (list nil))
   (cl-flet ((pull-window (win)
                          (stumpbuffer-command
                           "pull-window"
                           (number-to-string (getf (getf win :window-plist)
                                                   :id)))))
-    (let (marksp)
-      (stumpbuffer-do-marked-windows (win)
-        (setq marksp t)
-        (pull-window win))
-      (unless marksp
-        (when-let ((win (stumpbuffer-on-window)))
-          (pull-window win)))
-      (when stumpbuffer-quit-window-after-command
-        (stumpbuffer-quit-window)))))
+    (if window
+        ;; Pull the argument window if it was given...
+        (pull-window window)
+      (let (marksp)
+        ;; ... otherwise try pulling marked window...
+        (stumpbuffer-do-marked-windows (win)
+          (setq marksp t)
+          (pull-window win))
+        ;; ... failing that, pull the window at point.
+        (unless marksp
+          (when-let ((win (stumpbuffer-on-window)))
+            (pull-window win)))
+        (when stumpbuffer-quit-window-after-command
+          (stumpbuffer-quit-window))))))
 
 (defun stumpbuffer-throw-marked-windows-to-group (group-number)
   (interactive (list (get-text-property (point) 'stumpwm-group-number)))
