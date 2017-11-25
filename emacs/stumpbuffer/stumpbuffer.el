@@ -82,6 +82,9 @@
                                     (:instance nil "Instance"))
   "Format for displaying windows.")
 
+(defvar stumpbuffer-window-faces nil
+  "A list of (fn . face) pairs used to decide window face.")
+
 (defvar stumpbuffer-group-filters nil
   "A list of functions to filter groups.")
 (defvar stumpbuffer-window-filters nil
@@ -212,6 +215,13 @@ signalled with the message."
 
 (defun sb--current-window-plist ()
   (getf (stumpbuffer-on-window) :window-plist))
+
+(defun sb--get-window-face (window)
+  "Get the appropriate face for window."
+  (dolist (pair stumpbuffer-window-faces)
+    (destructuring-bind (fn . face) pair
+      (when (funcall fn window)
+        (return face)))))
 
 
 ;;; Navigating
@@ -380,8 +390,9 @@ is short for
          (getf window :start)
          (getf window :end)
          (list 'stumpbuffer-mark mark
-               'font-lock-face (when mark
-                                 stumpbuffer-marked-face))))
+               'face (if mark
+                         stumpbuffer-marked-face
+                       (sb--get-window-face (getf window :window-plist))))))
     (setq buffer-read-only t)))
 
 (defun sb--maybe-prompt-for-mark (default)
@@ -767,7 +778,8 @@ With a prefix argument this also focuses the window."
      `(keymap ,stumpbuffer-mode-window-map
               stumpbuffer-window ,(getf window-plist :number)
               stumpbuffer-window-id ,(getf window-plist :id)
-              stumpbuffer-window-plist ,window-plist))
+              stumpbuffer-window-plist ,window-plist
+              face ,(sb--get-window-face window-plist)))
     (insert "\n")))
 
 (defun sb--insert-frame (frame-plist)
@@ -779,7 +791,7 @@ With a prefix argument this also focuses the window."
        (progn (insert "Frame " (number-to-string number))
               (point))
        `(keymap ,stumpbuffer-mode-frame-map
-                font-lock-face ,stumpbuffer-frame-face
+                face ,stumpbuffer-frame-face
                 stumpbuffer-frame-number ,number
                 stumpbuffer-frame-plist ,frame-plist))
       (insert "\n"))
@@ -810,7 +822,7 @@ With a prefix argument this also focuses the window."
                 (insert " Floating groups don't work yet!"))
               (point))
        `(keymap ,stumpbuffer-mode-group-map
-                font-lock-face ,stumpbuffer-group-face
+                face ,stumpbuffer-group-face
                 stumpbuffer-group-number ,number
                 stumpbuffer-group-plist ,group-plist))
       (insert "\n")

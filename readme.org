@@ -150,6 +150,13 @@
     retrieved from Stumpwm, and return ~t~ if it should be filtered
     out.
 
+*** Faces
+
+    The variable ~stumpbuffer-window-faces~ is a list of ~(fn . face)~
+    pairs, where the ~fn~ is a function which takes a window plist
+    (the one retrieved from Stumpwm) as an argument, and returns true
+    if the window should be shown with the face.
+
 *** Communicating with Stumpwm
 
     Communication happens through stumpish. ~stumpbuffer-command~ can
