@@ -84,6 +84,8 @@
   (let ((map (make-keymap)))
     (define-key map (kbd "n") 'stumpbuffer-forward-line)
     (define-key map (kbd "p") 'stumpbuffer-backward-line)
+    (define-key map (kbd "C-n") 'stumpbuffer-forward-frame)
+    (define-key map (kbd "C-p") 'stumpbuffer-backward-frame)
     (define-key map (kbd "TAB") 'stumpbuffer-forward-group)
     (define-key map [backtab] 'stumpbuffer-backward-group)
     (define-key map (kbd "g") 'stumpbuffer-update)
@@ -456,24 +458,23 @@
   (when (stumpbuffer-on-frame-name)
     (stumpbuffer-forward-line))
   (goto-char (next-single-property-change (point)
-                                          'stumpbuffer-frame
+                                          'stumpbuffer-frame-number
                                           nil
                                           (point-max)))
   (when (= (point) (point-max))
-    (goto-char (point-min)))
+    (goto-char (point-min))
+    (stumpbuffer-forward-frame))
   (beginning-of-line))
 
 (defun stumpbuffer-backward-frame ()
   (interactive)
-  (when (stumpbuffer-on-frame-name)
-    (stumpbuffer-backward-line))
   (goto-char (previous-single-property-change (point)
-                                              'stumpbuffer-frame
+                                              'stumpbuffer-frame-number
                                               nil
                                               (point-min)))
   (when (= (point) (point-min))
     (goto-char (point-max))
-    (stumpbuffer-backward-group))
+    (stumpbuffer-backward-frame))
   (beginning-of-line))
 
 (defun stumpbuffer-forward-group ()

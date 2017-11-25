@@ -27,6 +27,8 @@
   |-----------+-----------------------------------------------------------------------------------------|
   | ~n~       | Move to next line                                                                       |
   | ~p~       | Move to previous line                                                                   |
+  | ~C-n~     | Move to next frame                                                                      |
+  | ~C-p~     | Move to previous frame                                                                  |
   | ~TAB~     | Move to next group                                                                      |
   | ~BACKTAB~ | Move to previous group                                                                  |
   | ~g~       | Update                                                                                  |
