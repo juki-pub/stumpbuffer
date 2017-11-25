@@ -60,6 +60,7 @@
   | ~% f~     | Mark windows in the same frame as the current window                                    |
   | ~% g~     | Mark windows in the same group as the current window                                    |
   | ~d~       | Mark for kill                                                                           |
+  | ~*~       | Change all `*` marks to a different character                                           |
   | ~x~       | Execute marks                                                                           |
   | ~D~       | Kill                                                                                    |
   | ~N~       | Rename                                                                                  |
