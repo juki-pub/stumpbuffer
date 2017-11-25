@@ -73,6 +73,11 @@
   :type 'face
   :group 'stumpbuffer)
 
+(defcustom stumpbuffer-window-field-t-character ?✓
+  "The character to use for `t` values in window fields."
+  :type 'character
+  :group 'stumpbuffer)
+
 (defvar stumpbuffer-kill-frame-on-exit-p nil)
 
 (defvar stumpbuffer-window-format '((:number 3 "N")
@@ -761,7 +766,12 @@ With a prefix argument this also focuses the window."
             (dolist (field stumpbuffer-window-format)
               (destructuring-bind (field &optional width title)
                   field
-                (let* ((entry (format "%s" (or (getf window-plist field) "")))
+                (let* ((entry (format "%s"
+                                      (if-let ((value (getf window-plist field)))
+                                          (if (eql value t)
+                                              (string stumpbuffer-window-field-t-character)
+                                            value)
+                                        "")))
                        (len (length entry)))
                   (insert (if width
                               (if (> len width)
