@@ -21,7 +21,9 @@
 
   The customization option ~stumpbuffer-quit-window-after-command~
   determines whether the buffer should be killed when executing
-  certain commands (such as focusing a window).
+  certain commands (such as focusing a
+  window). ~stumpbuffer-show-frames-p~ can be set to ~nil~ to hide
+  frames from the list.
 
   | Key       | Command                                                                                 |
   |-----------+-----------------------------------------------------------------------------------------|
@@ -52,9 +54,6 @@
   | ~s~       | Split frame vertically (only when point on frame name)                                  |
   | ~S~       | Split frame horizontally (only when point on frame name)                                |
   | ~C~       | Create new group (takes marked windows with it)                                         |
-
-  ~stumpbuffer-show-frames-p~ can be set to ~nil~ to hide frames from
-  the list.
   
 * Extending
 
@@ -63,10 +62,10 @@
    Variables ~STUMPBUFFER:*WINDOW-DATA-FIELDS*~,
    ~STUMPBUFFER:*GROUP-DATA-FIELDS*~ and
    ~STUMPBUFFER:*FRAME-DATA-FIELDS*~ contain alists of custom data
-   fields, which will be passed to Emacs. The keys should be keywords
-   and values functions. For windows and groups the function takes a
-   single argument, while frame functions should take both the group
-   and the frame (in that order).
+   fields to be passed to Emacs. The keys should be keywords and
+   values functions to generate the value. For windows and groups the
+   function takes a single argument, while frame functions should take
+   both the group and the frame (in that order).
 
    The values should be something that can be printed out, and read by
    emacs. In other words, stick with keywords, numbers and strings.
