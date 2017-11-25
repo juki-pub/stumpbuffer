@@ -188,6 +188,7 @@ signalled with the message."
   (getf (stumpbuffer-on-group-name) :group-plist))
 
 (defun stumpbuffer-on-frame-name ()
+  "If point is on a frame name, return info about it."
   (when-let ((group (get-text-property (point) 'stumpbuffer-group))
              (frame (get-text-property (point) 'stumpbuffer-frame-number)))
     (list :group group
@@ -216,6 +217,7 @@ signalled with the message."
 ;;; Navigating
 
 (defun stumpbuffer-forward-line ()
+  "Move forward one line. Wraps around."
   (interactive)
   (beginning-of-line)
   (forward-line 1)
@@ -223,6 +225,7 @@ signalled with the message."
     (goto-char (point-min))))
 
 (defun stumpbuffer-backward-line ()
+  "Move backward one line. Wraps around."
   (interactive)
   (when (= (point) (point-min))
     (goto-char (point-max)))
@@ -230,6 +233,7 @@ signalled with the message."
   (forward-line -1))
 
 (defun stumpbuffer-forward-frame ()
+  "Move to the next frame name. Wraps around."
   (interactive)
   (if (not stumpbuffer-show-frames-p)
       (stumpbuffer-forward-line)
@@ -245,6 +249,7 @@ signalled with the message."
     (beginning-of-line)))
 
 (defun stumpbuffer-backward-frame ()
+  "Move to the previous frame name. Wraps around."
   (interactive)
   (if (not stumpbuffer-show-frames-p)
       (stumpbuffer-backward-line)
@@ -258,6 +263,7 @@ signalled with the message."
     (beginning-of-line)))
 
 (defun stumpbuffer-forward-group ()
+  "Move to the next group name. Wraps around."
   (interactive)
   (when (stumpbuffer-on-group-name)
     (stumpbuffer-forward-line))
@@ -270,6 +276,7 @@ signalled with the message."
   (beginning-of-line))
 
 (defun stumpbuffer-backward-group ()
+  "Move to the previous group name. Wraps around."
   (interactive)
   (when (stumpbuffer-on-group-name)
     (stumpbuffer-backward-line))
@@ -286,6 +293,13 @@ signalled with the message."
 ;;; Iterating things
 
 (defun stumpbuffer-map-groups (fn)
+  "Call fn with each group.
+
+The function should take a single argument; the plist returned by
+`stumpbuffer-on-group-name'. The function is called with point on
+the group name.
+
+The results are discarded."
   (save-excursion
     (goto-char (point-min))
     (while (not (eobp))
@@ -295,6 +309,14 @@ signalled with the message."
       (forward-line))))
 
 (defmacro stumpbuffer-do-groups (arglist &rest body)
+  "Iterate over all groups.
+
+    (stumpbuffer-do-groups (group) ...)
+
+is short for
+
+    (stumpbuffer-map-groups (lambda (group) ...))
+"
   (declare (indent 1))
   `(stumpbuffer-map-groups (lambda ,arglist ,@body)))
 
@@ -615,6 +637,11 @@ signalled with the message."
       (stumpbuffer-quit-window))))
 
 (defun stumpbuffer-pull-windows (&optional window)
+  "Pull windows to the currently focused frame.
+
+If a window is given as an argument, it will be pulled. Otherwise
+all buffers marked with `*` are pulled. If there are no such
+marked windows, the window at point will be pulled."
   (interactive (list nil))
   (cl-flet ((pull-window (win)
                          (stumpbuffer-command
@@ -622,15 +649,12 @@ signalled with the message."
                           (number-to-string (getf (getf win :window-plist)
                                                   :id)))))
     (if window
-        ;; Pull the argument window if it was given...
         (pull-window window)
       (let (marksp)
-        ;; ... otherwise try pulling marked window...
         (stumpbuffer-do-marked-windows (win)
           (when (char-equal ?* (getf win :mark))
             (setq marksp t)
             (pull-window win)))
-        ;; ... failing that, pull the window at point.
         (unless marksp
           (when-let ((win (stumpbuffer-on-window)))
             (pull-window win)))
@@ -638,6 +662,9 @@ signalled with the message."
           (stumpbuffer-quit-window))))))
 
 (defun stumpbuffer-throw-marked-windows-to-group (group-number &optional followp)
+  "Move all `*` marked windows to a group.
+
+With a prefix argument this also switches to the group."
   (interactive (list (getf (sb--current-group-plist) :number)
                      current-prefix-arg))
   (let ((target (number-to-string group-number)))
@@ -651,6 +678,9 @@ signalled with the message."
     (stumpbuffer-switch-to-group group-number)))
 
 (defun stumpbuffer-throw-marked-windows-to-frame (group frame &optional followp)
+  "Move all `*` marked windows to a frame.
+
+With a prefix argument this also focuses the frame."
   (interactive (let ((frame (stumpbuffer-on-frame-name)))
                  (list (getf frame :group)
                        (getf (getf frame :frame-plist) :number)
@@ -668,6 +698,9 @@ signalled with the message."
     (stumpbuffer-focus-frame group frame)))
 
 (defun stumpbuffer-throw-marked-windows (target-window-id &optional followp)
+  "Move all `*` marked windows to a window.
+
+With a prefix argument this also focuses the window."
   (interactive (list (getf (sb--current-window-plist) :id)
                      current-prefix-arg))
   (when-let ((target-window (number-to-string target-window-id)))
