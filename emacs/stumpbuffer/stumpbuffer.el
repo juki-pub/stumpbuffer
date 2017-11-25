@@ -783,6 +783,10 @@
   "Filter hidden groups."
   (getf group :hiddenp))
 
+(defun stumpbuffer-filter-hidden-windows (window)
+  "Filter hidden (iconified) windows."
+  (getf window :hiddenp))
+
 (provide 'stumpbuffer)
 (run-hooks 'stumpbuffer-load-hook)
 ;;; stumpbuffer.el ends here
