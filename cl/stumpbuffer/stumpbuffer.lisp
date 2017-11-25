@@ -17,6 +17,10 @@
   (or (find number (group-frames group) :key #'frame-number)
       (error "No such frame.")))
 
+(defun find-window-by-id (id)
+  (or (stumpwm::window-by-id id)
+      (error "No such window.")))
+
 ;; This is just copy/paste of the same function in STUMPWM, except
 ;; that this takes the frame as an argument instead of using the
 ;; current frame.
@@ -70,65 +74,56 @@
       (gselect g)
       (stumpwm::focus-frame g (find-frame-by-group-and-number g frame-num)))))
 
-(defcommand stumpbuffer-focus-window (group-num window-num)
+(defcommand stumpbuffer-focus-window (group-num window-id)
     ((:number "Group number: ")
-     (:number "Window number: "))
+     (:number "Window ID: "))
   (with-simple-error-handling
     (let ((g (find-group-by-number group-num)))
       (gselect g)
-      (group-focus-window g (find-window-by-group-and-number g window-num)))))
+      (group-focus-window g (find-window-by-id window-id)))))
 
-(defcommand stumpbuffer-pull-window (group-num window-num)
-    ((:number "Group number: ")
-     (:number "Window number: "))
+(defcommand stumpbuffer-pull-window (window-id)
+    ((:number "Window ID: "))
   (with-simple-error-handling
-    (let* ((group (find-group-by-number group-num))
-           (window (find-window-by-group-and-number group window-num)))
+    (let ((window (find-window-by-id window-id)))
       (move-window-to-group window (current-group))
       (pull-window window))))
 
-(defcommand stumpbuffer-throw-window-to-group (from-group-num from-window-num
-                                               to-group-num)
-    ((:number "From group number: ")
-     (:number "From window number: ")
+(defcommand stumpbuffer-throw-window-to-group (from-window-id to-group-num)
+    ((:number "From window ID: ")
      (:number "To group number: "))
   (with-simple-error-handling
-    (let* ((from-group (find-group-by-number from-group-num))
-           (from-window (find-window-by-group-and-number
-                         from-group from-window-num))
+    (let ((from-window (find-window-by-id from-window-id))
            (to-group (find-group-by-number to-group-num)))
       (move-window-to-group from-window to-group))))
 
-(defcommand stumpbuffer-throw-window-to-frame (from-group-num from-window-num
-                                               to-group-num to-frame-num)
-    ((:number "From group number: ")
-     (:number "From window number: ")
+(defcommand stumpbuffer-throw-window-to-frame (from-window-id
+                                               to-group-num
+                                               to-frame-num)
+    ((:number "From window ID: ")
      (:number "To group number: ")
      (:number "To frame number: "))
   (with-simple-error-handling
-    (let* ((from-group (find-group-by-number from-group-num))
-           (from-window (find-window-by-group-and-number
-                         from-group from-window-num))
+    (let* ((from-window (find-window-by-id from-window-id))
            (to-group (find-group-by-number to-group-num))
            (to-frame (find-frame-by-group-and-number to-group to-frame-num)))
-      (move-window-to-group from-window to-group)
-      (pull-window from-window to-frame))))
+      (save-frame-excursion
+        (move-window-to-group from-window to-group)
+        (pull-window from-window to-frame)))))
 
-(defcommand stumpbuffer-throw-window (from-group-num from-window-num
-                                      to-group-num to-window-num)
-    ((:number "From group number: ")
-     (:number "From window number: ")
+(defcommand stumpbuffer-throw-window (from-window-id
+                                      to-group-num
+                                      to-window-id)
+    ((:number "From window ID: ")
      (:number "To group number: ")
-     (:number "To window number: "))
+     (:number "To window ID: "))
   (with-simple-error-handling
-    (let* ((from-group (find-group-by-number from-group-num))
-           (from-window (find-window-by-group-and-number
-                         from-group from-window-num))
+    (let* ((from-window (find-window-by-id from-window-id))
            (to-group (find-group-by-number to-group-num))
-           (to-window (find-window-by-group-and-number
-                       to-group to-window-num)))
-      (move-window-to-group from-window to-group)
-      (pull-window from-window (window-frame to-window)))))
+           (to-window (find-window-by-id to-window-id)))
+      (save-frame-excursion
+        (move-window-to-group from-window to-group)
+        (pull-window from-window (window-frame to-window))))))
 
 (defcommand stumpbuffer-rename-group (group-num name)
     ((:number "Group number: ")
@@ -173,21 +168,16 @@
               (gselect to-group))
             (kill-group group to-group))))))
 
-(defcommand stumpbuffer-rename-window (group-num window-num new-name)
-    ((:number "Group number: ")
-     (:number "Window number: ")
+(defcommand stumpbuffer-rename-window (id new-name)
+    ((:number "Window ID: ")
      (:string "New name: "))
   (with-simple-error-handling
-    (let* ((group (find-group-by-number group-num))
-           (window (find-window-by-group-and-number group window-num)))
-      (setf (window-user-title window) new-name))))
+    (setf (window-user-title (find-window-by-id id)) new-name)))
 
-(defcommand stumpbuffer-kill-window (group-num window-num)
-    ((:number "Group number: ")
-     (:number "Window number: "))
+(defcommand stumpbuffer-kill-window (window-id)
+    ((:number "Window ID: "))
   (with-simple-error-handling
-    (let* ((group (find-group-by-number group-num))
-           (window (find-window-by-group-and-number group window-num)))
+    (let* ((window (find-window-by-id window-id)))
       (delete-window window))))
 
 (defcommand stumpbuffer-kill-frame (group-num frame-num)
