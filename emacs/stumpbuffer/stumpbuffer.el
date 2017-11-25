@@ -87,7 +87,8 @@
                                     (:instance nil "Instance"))
   "Format for displaying windows.")
 
-(defvar stumpbuffer-window-faces nil
+(defvar stumpbuffer-window-faces
+  '((stumpbuffer-window-visible-p . bold))
   "A list of (fn . face) pairs used to decide window face.")
 
 (defvar stumpbuffer-group-filters nil
@@ -906,7 +907,7 @@ Kills the frame if necessary."
   (make-local-variable 'stumpbuffer-window-filters))
 
 
-;;; Filter utilities
+;;; Filter/face utilities
 
 (defun stumpbuffer-filter-hidden-groups (group)
   "Filter hidden groups."
@@ -915,6 +916,9 @@ Kills the frame if necessary."
 (defun stumpbuffer-filter-hidden-windows (window)
   "Filter hidden (iconified) windows."
   (getf window :hiddenp))
+
+(defun stumpbuffer-window-visible-p (window)
+  (getf window :visiblep))
 
 
 (provide 'stumpbuffer)
