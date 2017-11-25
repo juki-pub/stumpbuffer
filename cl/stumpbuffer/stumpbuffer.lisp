@@ -227,6 +227,7 @@ respectively."
                     :role (window-role window)
                     :instance (window-res window)
                     :id (stumpwm::window-id window)
+                    :hiddenp (stumpwm::window-hidden-p window)
                     (process-custom-fields *window-data-fields* window)))
            (frame-plist (group frame)
              (list* :number (frame-number frame)
@@ -246,6 +247,8 @@ respectively."
                                                   (frame-plist group frame))
                                                 (group-frames group))
                                         #'< :key #'number))
+                      :hiddenp (char= (char (group-name group) 0)
+                                      #\.)
                       (process-custom-fields *group-data-fields* group)))))
     (with-simple-error-handling
       (let ((*print-case* :downcase))
