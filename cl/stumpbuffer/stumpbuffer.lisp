@@ -227,6 +227,7 @@ respectively."
                     :id (window-id window)
                     :hiddenp (window-hidden-p window)
                     :visiblep (window-visible-p window)
+                    :fullscreenp (window-fullscreen window)
                     (process-custom-fields *window-data-fields* window)))
            (frame-plist (group frame)
              (list* :number (frame-number frame)

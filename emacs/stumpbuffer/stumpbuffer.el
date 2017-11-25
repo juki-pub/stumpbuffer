@@ -919,6 +919,9 @@ Kills the frame if necessary."
 (defun stumpbuffer-window-visible-p (window)
   (getf window :visiblep))
 
+(defun stumpbuffer-window-fullscreen-p (window)
+  (getf window :fullscreenp))
+
 
 (provide 'stumpbuffer)
 (run-hooks 'stumpbuffer-load-hook)
