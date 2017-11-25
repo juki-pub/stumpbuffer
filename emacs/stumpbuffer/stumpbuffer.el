@@ -30,7 +30,8 @@
 
 (defgroup stumpbuffer nil
   "A tool to control Stumpwm."
-  :version "0.1")
+  :version "0.1"
+  :group 'external)
 
 (defcustom stumpbuffer-stumpish-command "stumpish"
   "The name of the command to use to communicate with Stumpwm."
