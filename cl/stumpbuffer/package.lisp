@@ -1,7 +1,7 @@
 (in-package #:cl-user)
 
 (defpackage #:stumpbuffer
-  (:use #:cl #:stumpwm)
+  (:use #:cl #:stumpwm #:alexandria)
   
   ;; Grab some internal functions from stumpwm. This is kinda ugly,
   ;; but there's no point reimplementing everything.
@@ -19,7 +19,11 @@
                 #:frame-windows
                 #:group-frames)
   
-  (:export #:stumpbuffer-kill-group
+  (:export #:*window-data-fields*
+           #:*frame-data-fields*
+           #:*group-data-fields*
+
+           #:stumpbuffer-kill-group
            #:stumpbuffer-get-data
            #:stumpbuffer-pull-window
            #:stumpbuffer-rename-window
@@ -32,5 +36,6 @@
            #:stumpbuffer-rename-group
            #:stumpbuffer-kill-frame
            #:stumpbuffer-throw-window-to-frame
-           #:stumpbuffer-split-frame))
+           #:stumpbuffer-split-frame
+           #:stumpbuffer-focus-frame))
 

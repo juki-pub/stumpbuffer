@@ -206,23 +206,35 @@ respectively."
             (update-decoration (stumpwm::frame-window frame)))
           (error "Cannot split smaller than minimum size.")))))
 
+(defvar *window-data-fields* nil)
+(defvar *group-data-fields* nil)
+(defvar *frame-data-fields* nil)
+
 (defcommand stumpbuffer-get-data () ()
   "Retrieve information about groups and windows for StumpBuffer."
   (labels ((number (plist) (getf plist :number))
            (window-plist (window)
-             (list :number (window-number window)
-                   :frame (frame-number
-                           (window-frame window))
-                   :title (window-name window)
-                   :class (window-class window)
-                   :role (window-role window)
-                   :instance (window-res window)
-                   :id (stumpwm::window-id window)))
+             (list* :number (window-number window)
+                    :frame (frame-number
+                            (window-frame window))
+                    :title (window-name window)
+                    :class (window-class window)
+                    :role (window-role window)
+                    :instance (window-res window)
+                    :id (stumpwm::window-id window)
+                    (mappend (lambda (field)
+                               (destructuring-bind (key . fn) field
+                                 (list key (funcall fn window))))
+                             *window-data-fields*)))
            (frame-plist (group frame)
-             (list :number (frame-number frame)
-                   :windows (sort
-                             (mapcar #'window-plist (frame-windows group frame))
-                             #'< :key #'number)))
+             (list* :number (frame-number frame)
+                    :windows (sort
+                              (mapcar #'window-plist (frame-windows group frame))
+                              #'< :key #'number)
+                    (mappend (lambda (field)
+                               (destructuring-bind (key . fn) field
+                                 (list key (funcall fn group frame))))
+                             *frame-data-fields*)))
            (group-plist (group)
              (let ((type (if (typep group 'stumpwm::float-group)
                              :floating
@@ -230,12 +242,15 @@ respectively."
                (list* :number (group-number group)
                       :name (group-name group)
                       :type type
-                      (if (eql type :tiling)
-                          (list :frames
-                                (sort (mapcar (lambda (frame)
-                                                (frame-plist group frame))
-                                              (group-frames group))
-                                      #'< :key #'number)))))))
+                      :frames (if (eql type :tiling)
+                                  (sort (mapcar (lambda (frame)
+                                                  (frame-plist group frame))
+                                                (group-frames group))
+                                        #'< :key #'number))
+                      (mappend (lambda (field)
+                                 (destructuring-bind (key . fn) field
+                                   (list key (funcall fn group))))
+                               *group-data-fields*)))))
     (with-simple-error-handling
       (let ((*print-case* :downcase))
         (message "~s" (let ((groups (screen-groups (current-screen))))
