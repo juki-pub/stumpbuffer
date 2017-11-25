@@ -80,6 +80,9 @@
                                     (:instance nil "Instance"))
   "Format for displaying windows.")
 
+(defvar stumpbuffer-group-filters nil)
+(defvar stumpbuffer-window-filters nil)
+
 (defvar stumpbuffer-mode-map
   (let ((map (make-keymap)))
     (define-key map (kbd "n") 'stumpbuffer-forward-line)
@@ -396,13 +399,13 @@
                              (getf (getf win :window-plist)
                                    :title)))
     (stumpbuffer-kill win)
-    (stumpbuffer-update)))
+    (stumpbuffer-update)
+    (message "Killed windows may take a moment to die. Use `g` to update.")))
 
 (defun stumpbuffer-create-group (name)
   (interactive (list (read-string "New group name: ")))
   (when name
-    (stumpbuffer-command "create-group"
-                         name)
+    (stumpbuffer-command "create-group" name)
     (stumpbuffer-update)))
 
 (defun stumpbuffer-kill-group (group)
@@ -632,32 +635,37 @@
                                                 (min (length ,header)
                                                      (window-hscroll)))))))
 
+(defun stumpbuffer-filter-window-p (window)
+  (some (lambda (filter) (funcall filter window))
+        stumpbuffer-window-filters))
+
 (defun stumpbuffer-insert-window (window-plist)
-  (add-text-properties
-   (point)
-   (progn (insert "    ")
-          (dolist (field stumpbuffer-window-format)
-            (destructuring-bind (field &optional width title)
-                field
-              (let* ((entry (format "%s" (or (getf window-plist field) "")))
-                     (len (length entry)))
-                (insert (if width
-                            (if (> len width)
-                                (store-substring (make-string width ?.)
+  (unless (stumpbuffer-filter-window-p window-plist)
+    (add-text-properties
+     (point)
+     (progn (insert "    ")
+            (dolist (field stumpbuffer-window-format)
+              (destructuring-bind (field &optional width title)
+                  field
+                (let* ((entry (format "%s" (or (getf window-plist field) "")))
+                       (len (length entry)))
+                  (insert (if width
+                              (if (> len width)
+                                  (store-substring (make-string width ?.)
+                                                   0
+                                                   (substring entry 0
+                                                              (- width 3)))
+                                (store-substring (make-string width ?\s)
                                                  0
-                                                 (substring entry 0
-                                                            (- width 3)))
-                              (store-substring (make-string width ?\s)
-                                               0
-                                               (substring entry 0 len)))
-                          entry))))
-            (insert " "))
-          (point))
-   `(keymap ,stumpbuffer-mode-window-map
-            stumpbuffer-window ,(getf window-plist :number)
-            stumpbuffer-window-id ,(getf window-plist :id)
-            stumpbuffer-window-plist ,window-plist))
-  (insert "\n"))
+                                                 (substring entry 0 len)))
+                            entry))))
+              (insert " "))
+            (point))
+     `(keymap ,stumpbuffer-mode-window-map
+              stumpbuffer-window ,(getf window-plist :number)
+              stumpbuffer-window-id ,(getf window-plist :id)
+              stumpbuffer-window-plist ,window-plist))
+    (insert "\n")))
 
 (defun stumpbuffer-insert-frame (frame-plist)
   (destructuring-bind (&key number windows &allow-other-keys)
@@ -679,31 +687,36 @@
               (point))
        'stumpbuffer-frame number))))
 
+(defun stumpbuffer-filter-group-p (group)
+  (some (lambda (filter) (funcall filter group))
+        stumpbuffer-group-filters))
+
 (defun stumpbuffer-insert-group (group-plist)
-  (destructuring-bind (&key number name frames type &allow-other-keys)
-      group-plist
-    (add-text-properties
-     (point)
-     (progn (insert "[ ")
-            (when number
-              (insert (number-to-string number) " "))
-            (when name
-              (insert name))
-            (insert " ]")
-            (when (eql type :floating)
-              (insert " Floating groups don't work yet!"))
-            (point))
-     `(keymap ,stumpbuffer-mode-group-map
-              font-lock-face ,stumpbuffer-group-face
-              stumpbuffer-group-number ,number
-              stumpbuffer-group-plist ,group-plist))
-    (insert "\n")
-    (unless (null frames)
-      (put-text-property
+  (unless (stumpbuffer-filter-group-p group-plist)
+    (destructuring-bind (&key number name frames type &allow-other-keys)
+        group-plist
+      (add-text-properties
        (point)
-       (progn (mapc #'stumpbuffer-insert-frame frames)
+       (progn (insert "[ ")
+              (when number
+                (insert (number-to-string number) " "))
+              (when name
+                (insert name))
+              (insert " ]")
+              (when (eql type :floating)
+                (insert " Floating groups don't work yet!"))
               (point))
-       'stumpbuffer-group number))))
+       `(keymap ,stumpbuffer-mode-group-map
+                font-lock-face ,stumpbuffer-group-face
+                stumpbuffer-group-number ,number
+                stumpbuffer-group-plist ,group-plist))
+      (insert "\n")
+      (unless (null frames)
+        (put-text-property
+         (point)
+         (progn (mapc #'stumpbuffer-insert-frame frames)
+                (point))
+         'stumpbuffer-group number)))))
 
 (defun stumpbuffer-quit-window ()
   (interactive)
@@ -762,6 +775,13 @@
   (buffer-disable-undo)
   (hl-line-mode)
   (set (make-local-variable 'stumpbuffer-kill-frame-on-exit-p) nil))
+
+
+;;; Filter utilities
+
+(defun stumpbuffer-filter-hidden-groups (group)
+  "Filter hidden groups."
+  (getf group :hiddenp))
 
 (provide 'stumpbuffer)
 (run-hooks 'stumpbuffer-load-hook)
