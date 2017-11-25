@@ -80,8 +80,10 @@
                                     (:instance nil "Instance"))
   "Format for displaying windows.")
 
-(defvar stumpbuffer-group-filters nil)
-(defvar stumpbuffer-window-filters nil)
+(defvar stumpbuffer-group-filters nil
+  "A list of functions to filter groups.")
+(defvar stumpbuffer-window-filters nil
+  "A list of functions to filter windows.")
 
 (defvar stumpbuffer-mode-map
   (let ((map (make-keymap)))

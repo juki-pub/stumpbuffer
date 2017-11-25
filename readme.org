@@ -28,6 +28,18 @@
   window). ~stumpbuffer-show-frames-p~ can be set to ~nil~ to hide
   frames from the list.
 
+  The variable ~stumpbuffer-window-format~ determines which fields to
+  show for windows. It should be a list of three element lists in form
+
+  #+BEGIN_EXAMPLE
+  ((field-key width title)
+   ...)
+  #+END_EXAMPLE
+
+  The field key is the one [[*Stumpwm][returned by Stumpwm]]. Width should be the
+  number of characters to show. The last field can have width of
+  ~nil~. Title is the title to show in the header.
+
   | Key       | Command                                                                                 |
   |-----------+-----------------------------------------------------------------------------------------|
   | ~n~       | Move to next line                                                                       |
