@@ -462,27 +462,31 @@
 
 (defun stumpbuffer-forward-frame ()
   (interactive)
-  (when (stumpbuffer-on-frame-name)
-    (stumpbuffer-forward-line))
-  (goto-char (next-single-property-change (point)
-                                          'stumpbuffer-frame-number
-                                          nil
-                                          (point-max)))
-  (when (= (point) (point-max))
-    (goto-char (point-min))
-    (stumpbuffer-forward-frame))
-  (beginning-of-line))
+  (if (not stumpbuffer-show-frames-p)
+      (stumpbuffer-forward-line)
+    (when (stumpbuffer-on-frame-name)
+      (stumpbuffer-forward-line))
+    (goto-char (next-single-property-change (point)
+                                            'stumpbuffer-frame-number
+                                            nil
+                                            (point-max)))
+    (when (= (point) (point-max))
+      (goto-char (point-min))
+      (stumpbuffer-forward-frame))
+    (beginning-of-line)))
 
 (defun stumpbuffer-backward-frame ()
   (interactive)
-  (goto-char (previous-single-property-change (point)
-                                              'stumpbuffer-frame-number
-                                              nil
-                                              (point-min)))
-  (when (= (point) (point-min))
-    (goto-char (point-max))
-    (stumpbuffer-backward-frame))
-  (beginning-of-line))
+  (if (not stumpbuffer-show-frames-p)
+      (stumpbuffer-backward-line)
+    (goto-char (previous-single-property-change (point)
+                                                'stumpbuffer-frame-number
+                                                nil
+                                                (point-min)))
+    (when (= (point) (point-min))
+      (goto-char (point-max))
+      (stumpbuffer-backward-frame))
+    (beginning-of-line)))
 
 (defun stumpbuffer-forward-group ()
   (interactive)
