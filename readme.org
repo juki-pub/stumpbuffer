@@ -51,4 +51,5 @@
   | ~q~       | Quit                                                                                    |
   | ~s~       | Split frame vertically (only when point on frame name)                                  |
   | ~S~       | Split frame horizontally (only when point on frame name)                                |
+  | ~C~       | Create new group                                                                        |
 
