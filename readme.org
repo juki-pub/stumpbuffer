@@ -4,8 +4,11 @@
   experimental and unstable. Currently does not work with floating
   groups.
 
-  This uses a lot of Stumpwms internals, and so may or may not work on
-  any given version of Stumpwm.
+  Uses a lot of Stumpwms internals. This can't really be avoided since
+  Stumpwm doesn't expose everything for programmatic access. Using the
+  built-in commands would generally not work as those tend to require
+  the target to be focused, while StumpBuffer must be able to execute
+  them remotely.
 
 * Installing
 
@@ -54,7 +57,7 @@
   | ~s~       | Split frame vertically (only when point on frame name)                                  |
   | ~S~       | Split frame horizontally (only when point on frame name)                                |
   | ~C~       | Create new group (takes marked windows with it)                                         |
-  
+
 * Extending
 
 ** Stumpwm
@@ -74,7 +77,7 @@
 
 *** Marking
 
-    ~stumpbuffer-mark~ and ~stumpbuffer-unmark~ can be used to add and
+    ~stumpbuffer-mark~ and ~stumpbuffer-unmark~ can be used to add or
     remove mark from the window at point.
 
     ~stumpbuffer-mark-group~ and ~stumpbuffer-mark-frame~ will add a
@@ -97,7 +100,7 @@
 *** Custom mark functions
 
     The variable ~stumpbuffer-mark-functions~ contains an alist of
-    mark characters and function to call during
+    mark characters and functions to call during
     ~stumpbuffer-execute-marks~. The function should take the window
     plist as returned by ~stumpbuffer-on-window~.
     
@@ -123,8 +126,9 @@
     Filters are implemented with a very simple mechanism. The
     variables ~stumpbuffer-group-filters~ and
     ~stumpbuffer-window-filters~ contain a list of functions. The
-    function should take a single argument, a group or window plist,
-    and return ~t~ if it should be filtered out.
+    function should take a single argument, a group or window plist as
+    retrieved from Stumpwm, and return ~t~ if it should be filtered
+    out.
 
 *** Communicating with Stumpwm
 
