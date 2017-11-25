@@ -3,8 +3,9 @@
 (defpackage #:stumpbuffer
   (:use #:cl #:stumpwm #:alexandria)
   
-  ;; Grab some internal functions from stumpwm. This is kinda ugly,
-  ;; but there's no point reimplementing everything.
+  ;; Grab some internal functions from stumpwm. Using internals can't
+  ;; really be avoided since we have to be able to control things that
+  ;; aren't exposed by stumpwm.
   (:import-from #:stumpwm
                 #:pull-window
                 #:window-frame
