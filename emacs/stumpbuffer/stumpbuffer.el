@@ -405,7 +405,8 @@
 (defun stumpbuffer-create-group (name)
   (interactive (list (read-string "New group name: ")))
   (when name
-    (stumpbuffer-command "create-group" name)
+    (stumpbuffer-throw-marked-windows-to-group
+     (stumpbuffer-command "create-group" name))
     (stumpbuffer-update)))
 
 (defun stumpbuffer-kill-group (group)
@@ -583,21 +584,19 @@
       (when stumpbuffer-quit-window-after-command
         (stumpbuffer-quit-window)))))
 
-(defun stumpbuffer-throw-marked-windows-to-group ()
-  (interactive)
-  (when-let ((group (get-text-property (point) 'stumpbuffer-group-number))
-             (target-group (number-to-string group)))
+(defun stumpbuffer-throw-marked-windows-to-group (group-number)
+  (interactive (list (get-text-property (point) 'stumpwm-group-number)))
+  (let ((target (number-to-string group-number)))
     (stumpbuffer-do-marked-windows (win)
       (stumpbuffer-command "throw-window-to-group"
                            (number-to-string (getf (getf win :window-plist) :id))
-                           target-group)))
+                           target)))
   (stumpbuffer-update))
 
-(defun stumpbuffer-throw-marked-windows-to-frame ()
-  (interactive)
-  (when-let ((group (get-text-property (point) 'stumpbuffer-group))
-             (target-group (number-to-string group))
-             (frame (get-text-property (point) 'stumpbuffer-frame-number))
+(defun stumpbuffer-throw-marked-windows-to-frame (group frame)
+  (interactive (list (get-text-property (point) 'stumpbuffer-group)
+                     (get-text-property (point) 'stumpbuffer-frame-number)))
+  (when-let ((target-group (number-to-string group))
              (target-frame (number-to-string frame)))
     (stumpbuffer-do-marked-windows (win)
       (stumpbuffer-command "throw-window-to-frame"
@@ -606,16 +605,12 @@
                            target-frame)))
   (stumpbuffer-update))
 
-(defun stumpbuffer-throw-marked-windows ()
-  (interactive)
-  (when-let ((on-window (stumpbuffer-on-window))
-             (target-group (number-to-string (getf on-window :group)))
-             (target-window (number-to-string (getf (getf on-window :window-plist)
-                                                    :id))))
+(defun stumpbuffer-throw-marked-windows (target-window-id)
+  (interactive (list (get-text-property (point) 'stumpbuffer-window-id)))
+  (when-let ((target-window (number-to-string target-window-id)))
     (stumpbuffer-do-marked-windows (win)
       (stumpbuffer-command "throw-window"
                            (number-to-string (getf (getf win :window-plist) :id))
-                           target-group
                            target-window))
     (stumpbuffer-update)))
 

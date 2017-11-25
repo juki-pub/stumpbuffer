@@ -108,15 +108,13 @@
         (pull-window from-window to-frame)))))
 
 (defcommand stumpbuffer-throw-window (from-window-id
-                                      to-group-num
                                       to-window-id)
     ((:number "From window ID: ")
-     (:number "To group number: ")
      (:number "To window ID: "))
   (with-simple-error-handling
     (let* ((from-window (find-window-by-id from-window-id))
-           (to-group (find-group-by-number to-group-num))
-           (to-window (find-window-by-id to-window-id)))
+           (to-window (find-window-by-id to-window-id))
+           (to-group (window-group to-window)))
       (save-frame-excursion
         (move-window-to-group from-window to-group)
         (pull-window from-window (window-frame to-window))))))
@@ -146,7 +144,7 @@
 (defcommand stumpbuffer-create-group (name)
     ((:string "Group name: "))
   (with-simple-error-handling
-    (add-group (current-screen) name :background t)))
+    (message "~d" (group-number (add-group (current-screen) name :background t)))))
 
 (defcommand stumpbuffer-kill-group (group-num)
     ((:number "Group number: "))
