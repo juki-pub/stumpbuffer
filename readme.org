@@ -87,6 +87,13 @@
 
 ** Emacs
 
+*** Key maps
+
+    ~stumpbuffer-mode-map~ is for keys that are always active in the
+    buffer. ~stumpbuffer-mode-group-map~, ~stumpbuffer-mode-frame-map~
+    and ~stumpbuffer-mode-window-map~ are only active when point is on
+    a group name, frame name or a window respectively.
+   
 *** Marking
 
     ~stumpbuffer-mark~ and ~stumpbuffer-unmark~ can be used to add or
