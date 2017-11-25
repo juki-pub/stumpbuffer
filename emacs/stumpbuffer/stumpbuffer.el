@@ -187,6 +187,10 @@
           (funcall fn group)))
       (forward-line))))
 
+(defmacro stumpbuffer-do-groups (arglist &rest body)
+  (declare (indent 1))
+  `(stumpbuffer-map-groups (lambda ,arglist ,@body)))
+
 (defun stumpbuffer-map-windows (fn)
   (save-excursion
     (goto-char (point-min))
@@ -195,6 +199,10 @@
         (save-excursion
           (funcall fn win)))
       (forward-line))))
+
+(defmacro stumpbuffer-do-windows (arglist &rest body)
+  (declare (indent 1))
+  `(stumpbuffer-map-windows (lambda ,arglist ,@body)))
 
 (defun stumpbuffer-map-group-windows (fn)
   (save-excursion
@@ -208,6 +216,10 @@
           (funcall fn win)))
       (forward-line))))
 
+(defmacro stumpbuffer-do-group-windows (arglist &rest body)
+  (declare (indent 1))
+  `(stumpbuffer-map-group-windows (lambda ,arglist ,@body)))
+
 (defun stumpbuffer-map-marked-windows (fn)
   (save-excursion
     (goto-char (point-min))
@@ -217,6 +229,10 @@
           (save-excursion
             (funcall fn win))))
       (forward-line))))
+
+(defmacro stumpbuffer-do-marked-windows (arglist &rest body)
+  (declare (indent 1))
+  `(stumpbuffer-map-marked-windows (lambda ,arglist ,@body)))
 
 (defun stumpbuffer-change-window-mark (window mark)
   (unwind-protect
@@ -241,9 +257,8 @@
   (interactive (list (stumpbuffer-on-group-name)
                      ?*))
   (when group
-    (stumpbuffer-map-group-windows
-     (lambda (win) 
-       (stumpbuffer-change-window-mark win mark)))
+    (stumpbuffer-do-group-windows (win)
+      (stumpbuffer-change-window-mark win mark))
     (stumpbuffer-forward-group)))
 
 (defun stumpbuffer-mark-frame (mark)
@@ -251,10 +266,9 @@
   (interactive (list ?*))
   (when-let ((frame (stumpbuffer-on-frame-name))
              (frame-num (getf (getf frame :frame-plist) :number)))
-    (stumpbuffer-map-group-windows
-     (lambda (win)
-       (when (= frame-num (getf (getf win :window-plist) :frame))
-         (stumpbuffer-change-window-mark win mark))))
+    (stumpbuffer-do-group-windows (win)
+      (when (= frame-num (getf (getf win :window-plist) :frame))
+        (stumpbuffer-change-window-mark win mark)))
     (stumpbuffer-forward-frame)))
 
 (defun stumpbuffer-mark (mark)
@@ -282,9 +296,8 @@
 (defun stumpbuffer-unmark-all ()
   "Remove all marks."
   (interactive)
-  (stumpbuffer-map-marked-windows
-   (lambda (win)
-     (stumpbuffer-change-window-mark win nil))))
+  (stumpbuffer-do-marked-windows (win)
+    (stumpbuffer-change-window-mark win nil)))
 
 (defun stumpbuffer-mark-to-kill ()
   (interactive)
@@ -293,20 +306,18 @@
 (defun stumpbuffer-mark-by-window-title-regex (regex mark)
   (interactive (list (read-string "Regex: ")
                      ?*))
-  (stumpbuffer-map-windows
-   (lambda (win)
-     (when-let ((title (getf (getf win :window-plist) :title)))
-       (when (string-match regex title)
-         (stumpbuffer-mark mark))))))
+  (stumpbuffer-do-windows (win)
+    (when-let ((title (getf (getf win :window-plist) :title)))
+      (when (string-match regex title)
+        (stumpbuffer-mark mark)))))
 
 (defun stumpbuffer-mark-by-frame (frame mark)
   (interactive (list (getf (getf (stumpbuffer-on-window) :window-plist) :frame)
                      ?*))
-  (stumpbuffer-map-group-windows
-   (lambda (win)
-     (when-let ((f (getf (getf win :window-plist) :frame)))
-       (when (= f frame)
-         (stumpbuffer-mark mark))))))
+  (stumpbuffer-do-group-windows (win)
+    (when-let ((f (getf (getf win :window-plist) :frame)))
+      (when (= f frame)
+        (stumpbuffer-mark mark)))))
 
 (defun stumpbuffer-mark-frame-for-kill (frame)
   (interactive (list (getf (getf (stumpbuffer-on-frame-name) :frame-plist)
@@ -321,10 +332,10 @@
 
 (defun stumpbuffer-get-all-window-values (field)
   (let (result)
-    (stumpbuffer-map-windows (lambda (win)
-                               (when-let ((val (getf (getf win :window-plist)
-                                                     field)))
-                                 (push val result))))
+    (stumpbuffer-do-windows (win)
+      (when-let ((val (getf (getf win :window-plist)
+                            field)))
+        (push val result)))
     result))
 
 (defun stumpbuffer-mark-by-window-class (class mark)
@@ -334,10 +345,9 @@
                          (completing-read "Class: "
                                           (stumpbuffer-get-all-window-values :class)))
                      ?*))
-  (stumpbuffer-map-windows
-   (lambda (win)
-     (when (equal class (getf (getf win :window-plist) :class))
-       (stumpbuffer-mark mark)))))
+  (stumpbuffer-do-windows (win)
+    (when (equal class (getf (getf win :window-plist) :class))
+      (stumpbuffer-mark mark))))
 
 (defun stumpbuffer-mark-by-window-role (role mark)
   (interactive (list (or (unless current-prefix-arg
@@ -346,10 +356,9 @@
                          (completing-read "Role: "
                                           (stumpbuffer-get-all-window-values :role)))
                      ?*))
-  (stumpbuffer-map-windows
-   (lambda (win)
-     (when (equal role (getf (getf win :window-plist) :role))
-       (stumpbuffer-mark mark)))))
+  (stumpbuffer-do-windows (win)
+    (when (equal role (getf (getf win :window-plist) :role))
+      (stumpbuffer-mark mark))))
 
 (defun stumpbuffer-mark-by-window-instance (instance mark)
   (interactive (list (or (unless current-prefix-arg
@@ -358,25 +367,22 @@
                          (completing-read "Instance: "
                                           (stumpbuffer-get-all-window-values :instance)))
                      ?*))
-  (stumpbuffer-map-windows
-   (lambda (win)
-     (when (equal instance (getf (getf win :window-plist) :instance))
-       (stumpbuffer-mark mark)))))
+  (stumpbuffer-do-windows (win)
+    (when (equal instance (getf (getf win :window-plist) :instance))
+      (stumpbuffer-mark mark))))
 
 (defun stumpbuffer-mark-current-group (mark)
   (interactive (list ?*))
-  (stumpbuffer-map-group-windows
-   (lambda (win)
-     (stumpbuffer-mark mark))))
+  (stumpbuffer-do-group-windows (win)
+    (stumpbuffer-mark mark)))
 
 (defun stumpbuffer-execute-marks ()
   (interactive)
-  (stumpbuffer-map-marked-windows
-   (lambda (win)
-     (when-let ((mark (getf win :mark))
-                (fn (cdr (assoc mark stumpbuffer-mark-functions))))
-       (funcall fn win)
-       (stumpbuffer-unmark))))
+  (stumpbuffer-do-marked-windows (win)
+    (when-let ((mark (getf win :mark))
+               (fn (cdr (assoc mark stumpbuffer-mark-functions))))
+      (funcall fn win)
+      (stumpbuffer-unmark)))
   (stumpbuffer-update))
 
 (defun stumpbuffer-kill (win)
@@ -561,9 +567,9 @@
                           (number-to-string (getf (getf win :window-plist)
                                                   :id)))))
     (let (marksp)
-      (stumpbuffer-map-marked-windows (lambda (win)
-                                        (setq marksp t)
-                                        (pull-window win)))
+      (stumpbuffer-do-marked-windows (win)
+        (setq marksp t)
+        (pull-window win))
       (unless marksp
         (when-let ((win (stumpbuffer-on-window)))
           (pull-window win)))
@@ -574,11 +580,10 @@
   (interactive)
   (when-let ((group (get-text-property (point) 'stumpbuffer-group-number))
              (target-group (number-to-string group)))
-    (stumpbuffer-map-marked-windows
-     (lambda (win)
-       (stumpbuffer-command "throw-window-to-group"
-                            (number-to-string (getf (getf win :window-plist) :id))
-                            target-group))))
+    (stumpbuffer-do-marked-windows (win)
+      (stumpbuffer-command "throw-window-to-group"
+                           (number-to-string (getf (getf win :window-plist) :id))
+                           target-group)))
   (stumpbuffer-update))
 
 (defun stumpbuffer-throw-marked-windows-to-frame ()
@@ -587,12 +592,11 @@
              (target-group (number-to-string group))
              (frame (get-text-property (point) 'stumpbuffer-frame-number))
              (target-frame (number-to-string frame)))
-    (stumpbuffer-map-marked-windows
-     (lambda (win)
-       (stumpbuffer-command "throw-window-to-frame"
-                            (number-to-string (getf (getf win :window-plist) :id))
-                            target-group
-                            target-frame))))
+    (stumpbuffer-do-marked-windows (win)
+      (stumpbuffer-command "throw-window-to-frame"
+                           (number-to-string (getf (getf win :window-plist) :id))
+                           target-group
+                           target-frame)))
   (stumpbuffer-update))
 
 (defun stumpbuffer-throw-marked-windows ()
@@ -601,12 +605,11 @@
              (target-group (number-to-string (getf on-window :group)))
              (target-window (number-to-string (getf (getf on-window :window-plist)
                                                     :id))))
-    (stumpbuffer-map-marked-windows
-     (lambda (win)
-       (stumpbuffer-command "throw-window"
-                            (number-to-string (getf (getf win :window-plist) :id))
-                            target-group
-                            target-window)))
+    (stumpbuffer-do-marked-windows (win)
+      (stumpbuffer-command "throw-window"
+                           (number-to-string (getf (getf win :window-plist) :id))
+                           target-group
+                           target-window))
     (stumpbuffer-update)))
 
 (defun stumpbuffer-get-data ()
@@ -712,12 +715,11 @@
 (defun stumpbuffer-update ()
   (interactive)
   (let (active-marks)
-    (stumpbuffer-map-windows
-     (lambda (win)
-       (when-let ((mark (getf win :mark)))
-         (push (cons (getf (getf win :window-plist) :id)
-                     mark)
-               active-marks))))
+    (stumpbuffer-do-windows (win)
+      (when-let ((mark (getf win :mark)))
+        (push (cons (getf (getf win :window-plist) :id)
+                    mark)
+              active-marks)))
     (let ((position (count-lines (point-min) (point))))
       (unwind-protect
           (progn
@@ -727,11 +729,10 @@
             (mapc #'stumpbuffer-insert-group (stumpbuffer-get-data)))
         (setq buffer-read-only t)
         (when active-marks
-          (stumpbuffer-map-windows
-           (lambda (win)
-             (when-let ((id (getf (getf win :window-plist) :id))
-                        (mark (cdr (assoc id active-marks))))
-               (stumpbuffer-mark mark)))))
+          (stumpbuffer-do-windows (win)
+            (when-let ((id (getf (getf win :window-plist) :id))
+                       (mark (cdr (assoc id active-marks))))
+              (stumpbuffer-mark mark))))
         (goto-char (point-min))
         (dotimes (i position)
           (stumpbuffer-forward-line))))))

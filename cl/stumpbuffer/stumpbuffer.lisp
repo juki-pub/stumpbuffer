@@ -213,6 +213,11 @@ respectively."
 (defcommand stumpbuffer-get-data () ()
   "Retrieve information about groups and windows for StumpBuffer."
   (labels ((number (plist) (getf plist :number))
+           (process-custom-fields (alist &rest args)
+             (mappend (lambda (field)
+                        (destructuring-bind (key . fn) field
+                          (list key (apply fn args))))
+                      alist))
            (window-plist (window)
              (list* :number (window-number window)
                     :frame (frame-number
@@ -222,19 +227,13 @@ respectively."
                     :role (window-role window)
                     :instance (window-res window)
                     :id (stumpwm::window-id window)
-                    (mappend (lambda (field)
-                               (destructuring-bind (key . fn) field
-                                 (list key (funcall fn window))))
-                             *window-data-fields*)))
+                    (process-custom-fields *window-data-fields* window)))
            (frame-plist (group frame)
              (list* :number (frame-number frame)
                     :windows (sort
                               (mapcar #'window-plist (frame-windows group frame))
                               #'< :key #'number)
-                    (mappend (lambda (field)
-                               (destructuring-bind (key . fn) field
-                                 (list key (funcall fn group frame))))
-                             *frame-data-fields*)))
+                    (process-custom-fields *frame-data-fields* group frame)))
            (group-plist (group)
              (let ((type (if (typep group 'stumpwm::float-group)
                              :floating
@@ -247,10 +246,7 @@ respectively."
                                                   (frame-plist group frame))
                                                 (group-frames group))
                                         #'< :key #'number))
-                      (mappend (lambda (field)
-                                 (destructuring-bind (key . fn) field
-                                   (list key (funcall fn group))))
-                               *group-data-fields*)))))
+                      (process-custom-fields *group-data-fields* group)))))
     (with-simple-error-handling
       (let ((*print-case* :downcase))
         (message "~s" (let ((groups (screen-groups (current-screen))))
