@@ -53,3 +53,94 @@
   | ~S~       | Split frame horizontally (only when point on frame name)                                |
   | ~C~       | Create new group (takes marked windows with it)                                         |
 
+  ~stumpbuffer-show-frames-p~ can be set to ~nil~ to hide frames from
+  the list.
+  
+* Extending
+
+** Stumpwm
+
+   Variables ~STUMPBUFFER:*WINDOW-DATA-FIELDS*~,
+   ~STUMPBUFFER:*GROUP-DATA-FIELDS*~ and
+   ~STUMPBUFFER:*FRAME-DATA-FIELDS*~ contain alists of custom data
+   fields, which will be passed to Emacs. The keys should be keywords
+   and values functions. For windows and groups the function takes a
+   single argument, while frame functions should take both the group
+   and the frame (in that order).
+
+   The values should be something that can be printed out, and read by
+   emacs. In other words, stick with keywords, numbers and strings.
+
+** Emacs
+
+*** Marking
+
+    ~stumpbuffer-mark~ and ~stumpbuffer-unmark~ can be used to add and
+    remove mark from the window at point.
+
+    ~stumpbuffer-mark-group~ and ~stumpbuffer-mark-frame~ will add a
+    mark to all windows in the group or frame. They have a
+    corresponding unmark function.
+   
+*** Getting information about things at point
+
+    ~stumpbuffer-on-group-name~, ~stumpbuffer-on-frame-name~ and
+    ~stumpbuffer-on-window~ will return a plist with information about
+    the thing at point.
+
+    Each of the plists have keys ~:start~ and ~:end~ containing the
+    character positions of the thing. There is also a key
+    ~<group|frame|window>-plist~ containing the property list
+    retrieved from Stumpwm. Windows and frames also have the key
+    ~:group~ containing the number of the group they're in. Windows
+    may have a key ~:mark~ with the current mark of the window.
+
+*** Custom mark functions
+
+    The variable ~stumpbuffer-mark-functions~ contains an alist of
+    mark characters and function to call during
+    ~stumpbuffer-execute-marks~. The function should take the window
+    plist as returned by ~stumpbuffer-on-window~.
+    
+*** Iterating groups and windows
+
+    ~stumpbuffer-map-groups~ can be used to apply a function to each
+    group. The function should take a single argument, the plist
+    returned by ~stumpbuffer-on-group-name~. The function will be
+    called with point on the group name. Results of the function are
+    discarded.
+
+    ~stumpbuffer-map-windows~ calls a function on all
+    windows. ~stumpbuffer-map-group-windows~ calls a function on
+    windows in the group the point is
+    on. ~stumpbuffer-map-marked-windows~ calls a function on marked
+    windows.
+
+    All of these have a corresponding macro
+    ~stumpbuffer-do-<something>~.
+   
+*** Filters
+
+    Filters are implemented with a very simple mechanism. The
+    variables ~stumpbuffer-group-filters~ and
+    ~stumpbuffer-window-filters~ contain a list of functions. The
+    function should take a single argument, a group or window plist,
+    and return ~t~ if it should be filtered out.
+
+*** Communicating with Stumpwm
+
+    Communication happens through stumpish. ~stumpbuffer-command~ can
+    be used to execute a command. The name will automatically have
+    ~stumpbuffer-~ prepended to it, so the commands on Stumpwm side
+    should have that prefix (alternatively just call stumpish
+    yourself).
+
+    The command should return something that Emacs can ~read~. This
+    will be returned from ~stumpbuffer-command~. 
+
+    There is a simple error handling mechanism. The command can return
+    a two element list ~(:error msg)~, in which case Emacs will
+    ~error~ with the message.
+    
+    Notice that since the communication goes through stumpish, the CL
+    code must use ~MESSAGE~ to return values.

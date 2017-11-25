@@ -165,8 +165,10 @@
           :group-plist (get-text-property (point) 'stumpbuffer-group-plist))))
 
 (defun stumpbuffer-on-frame-name ()
-  (when-let ((frame (get-text-property (point) 'stumpbuffer-frame-number)))
-    (list :start (point-at-bol)
+  (when-let ((group (get-text-property (point) 'stumpbuffer-group))
+             (frame (get-text-property (point) 'stumpbuffer-frame-number)))
+    (list :group group
+          :start (point-at-bol)
           :end (point-at-eol)
           :frame-plist (get-text-property (point) 'stumpbuffer-frame-plist))))
 
