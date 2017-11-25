@@ -230,7 +230,8 @@ respectively."
                    :title (window-name window)
                    :class (window-class window)
                    :role (window-role window)
-                   :instance (window-res window)))
+                   :instance (window-res window)
+                   :id (stumpwm::window-id window)))
            (frame-plist (group frame)
              (list :number (frame-number frame)
                    :windows (sort
