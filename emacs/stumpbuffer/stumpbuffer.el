@@ -88,7 +88,8 @@
   "Format for displaying windows.")
 
 (defvar stumpbuffer-window-faces
-  '((stumpbuffer-window-visible-p . bold))
+  '((stumpbuffer-window-visible-p . bold)
+    (stumpbuffer-window-hidden-p . shadow))
   "A list of (fn . face) pairs used to decide window face.")
 
 (defvar stumpbuffer-group-filters nil
