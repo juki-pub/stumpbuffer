@@ -36,7 +36,7 @@
    ...)
   #+END_EXAMPLE
 
-  The field key is the one [[*Stumpwm][returned by Stumpwm]]. Width should be the
+  The field key is the one returned by Stumpwm. Width should be the
   number of characters to show. The last field can have width of
   ~nil~. Title is the title to show in the header.
 
