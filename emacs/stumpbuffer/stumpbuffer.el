@@ -625,8 +625,9 @@ signalled with the message."
       (let (marksp)
         ;; ... otherwise try pulling marked window...
         (stumpbuffer-do-marked-windows (win)
-          (setq marksp t)
-          (pull-window win))
+          (when (char-equal ?* (getf win :mark))
+            (setq marksp t)
+            (pull-window win)))
         ;; ... failing that, pull the window at point.
         (unless marksp
           (when-let ((win (stumpbuffer-on-window)))
@@ -639,9 +640,10 @@ signalled with the message."
                      current-prefix-arg))
   (let ((target (number-to-string group-number)))
     (stumpbuffer-do-marked-windows (win)
-      (stumpbuffer-command "throw-window-to-group"
-                           (number-to-string (getf (getf win :window-plist) :id))
-                           target)))
+      (when (char-equal ?* (getf win :mark))
+        (stumpbuffer-command "throw-window-to-group"
+                             (number-to-string (getf (getf win :window-plist) :id))
+                             target))))
   (stumpbuffer-update)
   (when followp
     (stumpbuffer-switch-to-group group-number)))
@@ -654,10 +656,11 @@ signalled with the message."
   (when-let ((target-group (number-to-string group))
              (target-frame (number-to-string frame)))
     (stumpbuffer-do-marked-windows (win)
-      (stumpbuffer-command "throw-window-to-frame"
-                           (number-to-string (getf (getf win :window-plist) :id))
-                           target-group
-                           target-frame)))
+      (when (char-equal ?* (getf win :mark))
+        (stumpbuffer-command "throw-window-to-frame"
+                             (number-to-string (getf (getf win :window-plist) :id))
+                             target-group
+                             target-frame))))
   (stumpbuffer-update)
   (when followp
     (stumpbuffer-focus-frame group frame)))
@@ -667,9 +670,10 @@ signalled with the message."
                      current-prefix-arg))
   (when-let ((target-window (number-to-string target-window-id)))
     (stumpbuffer-do-marked-windows (win)
-      (stumpbuffer-command "throw-window"
-                           (number-to-string (getf (getf win :window-plist) :id))
-                           target-window))
+      (when (char-equal ?* (getf win :mark))
+        (stumpbuffer-command "throw-window"
+                             (number-to-string (getf (getf win :window-plist) :id))
+                             target-window)))
     (stumpbuffer-update)
     (when followp
       (let ((twindow (stumpbuffer-on-window)))
