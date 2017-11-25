@@ -145,7 +145,19 @@
   '((?D . stumpbuffer-kill))
   "An alist of mark character to functions to execute the mark.")
 
+
+;;; Executing commands
+
 (defun stumpbuffer-command (command &rest args)
+  "Execute a Stumpwm command.
+
+The command name will be prepended with `stumpbuffer-`. The
+command should return something that Emacs can read, which will
+be the return value.
+
+As a simple error handling mechanism, the command may return a
+two element list `(:error msg)`. An Emacs error will be
+signalled with the message."
   (let ((output (get-buffer-create "*stumpbuffer-data*")))
     (apply #'call-process stumpbuffer-stumpish-command
            nil output nil
@@ -158,6 +170,9 @@
                    (eql :error (first result)))
               (error "StumpBuffer error: %s" (second result))
             result))))))
+
+
+;;; Retrieving info about things
 
 (defun stumpbuffer-on-group-name ()
   "If point is on a group name, return info about it."
@@ -193,6 +208,79 @@
 
 (defun stumpbuffer-current-window-plist ()
   (getf (stumpbuffer-on-window) :window-plist))
+
+
+;;; Navigating
+
+(defun stumpbuffer-forward-line ()
+  (interactive)
+  (beginning-of-line)
+  (forward-line 1)
+  (when (eobp)
+    (goto-char (point-min))))
+
+(defun stumpbuffer-backward-line ()
+  (interactive)
+  (when (= (point) (point-min))
+    (goto-char (point-max)))
+  (beginning-of-line)
+  (forward-line -1))
+
+(defun stumpbuffer-forward-frame ()
+  (interactive)
+  (if (not stumpbuffer-show-frames-p)
+      (stumpbuffer-forward-line)
+    (when (stumpbuffer-on-frame-name)
+      (stumpbuffer-forward-line))
+    (goto-char (next-single-property-change (point)
+                                            'stumpbuffer-frame-number
+                                            nil
+                                            (point-max)))
+    (when (= (point) (point-max))
+      (goto-char (point-min))
+      (stumpbuffer-forward-frame))
+    (beginning-of-line)))
+
+(defun stumpbuffer-backward-frame ()
+  (interactive)
+  (if (not stumpbuffer-show-frames-p)
+      (stumpbuffer-backward-line)
+    (goto-char (previous-single-property-change (point)
+                                                'stumpbuffer-frame-number
+                                                nil
+                                                (point-min)))
+    (when (= (point) (point-min))
+      (goto-char (point-max))
+      (stumpbuffer-backward-frame))
+    (beginning-of-line)))
+
+(defun stumpbuffer-forward-group ()
+  (interactive)
+  (when (stumpbuffer-on-group-name)
+    (stumpbuffer-forward-line))
+  (goto-char (next-single-property-change (point)
+                                          'stumpbuffer-group-number
+                                          nil
+                                          (point-max)))
+  (when (= (point) (point-max))
+    (goto-char (point-min)))
+  (beginning-of-line))
+
+(defun stumpbuffer-backward-group ()
+  (interactive)
+  (when (stumpbuffer-on-group-name)
+    (stumpbuffer-backward-line))
+  (goto-char (previous-single-property-change (point)
+                                              'stumpbuffer-group-number
+                                              nil
+                                              (point-min)))
+  (when (= (point) (point-min))
+    (goto-char (point-max))
+    (stumpbuffer-backward-group))
+  (beginning-of-line))
+
+
+;;; Iterating things
 
 (defun stumpbuffer-map-groups (fn)
   (save-excursion
@@ -249,6 +337,9 @@
 (defmacro stumpbuffer-do-marked-windows (arglist &rest body)
   (declare (indent 1))
   `(stumpbuffer-map-marked-windows (lambda ,arglist ,@body)))
+
+
+;;; Commands
 
 (defun stumpbuffer-change-window-mark (window mark)
   (unwind-protect
@@ -457,73 +548,6 @@
                          "1")
     (stumpbuffer-update)))
 
-(defun stumpbuffer-forward-line ()
-  (interactive)
-  (beginning-of-line)
-  (forward-line 1)
-  (when (eobp)
-    (goto-char (point-min))))
-
-(defun stumpbuffer-backward-line ()
-  (interactive)
-  (when (= (point) (point-min))
-    (goto-char (point-max)))
-  (beginning-of-line)
-  (forward-line -1))
-
-(defun stumpbuffer-forward-frame ()
-  (interactive)
-  (if (not stumpbuffer-show-frames-p)
-      (stumpbuffer-forward-line)
-    (when (stumpbuffer-on-frame-name)
-      (stumpbuffer-forward-line))
-    (goto-char (next-single-property-change (point)
-                                            'stumpbuffer-frame-number
-                                            nil
-                                            (point-max)))
-    (when (= (point) (point-max))
-      (goto-char (point-min))
-      (stumpbuffer-forward-frame))
-    (beginning-of-line)))
-
-(defun stumpbuffer-backward-frame ()
-  (interactive)
-  (if (not stumpbuffer-show-frames-p)
-      (stumpbuffer-backward-line)
-    (goto-char (previous-single-property-change (point)
-                                                'stumpbuffer-frame-number
-                                                nil
-                                                (point-min)))
-    (when (= (point) (point-min))
-      (goto-char (point-max))
-      (stumpbuffer-backward-frame))
-    (beginning-of-line)))
-
-(defun stumpbuffer-forward-group ()
-  (interactive)
-  (when (stumpbuffer-on-group-name)
-    (stumpbuffer-forward-line))
-  (goto-char (next-single-property-change (point)
-                                          'stumpbuffer-group-number
-                                          nil
-                                          (point-max)))
-  (when (= (point) (point-max))
-    (goto-char (point-min)))
-  (beginning-of-line))
-
-(defun stumpbuffer-backward-group ()
-  (interactive)
-  (when (stumpbuffer-on-group-name)
-    (stumpbuffer-backward-line))
-  (goto-char (previous-single-property-change (point)
-                                              'stumpbuffer-group-number
-                                              nil
-                                              (point-min)))
-  (when (= (point) (point-min))
-    (goto-char (point-max))
-    (stumpbuffer-backward-group))
-  (beginning-of-line))
-
 (defun stumpbuffer-rename-group (group new-name)
   (interactive (let ((gplist (stumpbuffer-current-group-plist)))
                  (list (getf gplist :number)
@@ -629,6 +653,9 @@
                            target-window))
     (stumpbuffer-update)))
 
+
+;;; Retrieving data and updating
+
 (defun stumpbuffer-get-data ()
   (stumpbuffer-command "get-data"))
 
@@ -732,13 +759,6 @@
                 (point))
          'stumpbuffer-group number)))))
 
-(defun stumpbuffer-quit-window ()
-  (interactive)
-  (when-let ((buf (get-buffer "*StumpBuffer*")))
-    (kill-buffer buf))
-  (when stumpbuffer-kill-frame-on-exit-p
-    (delete-frame)))
-
 (defun stumpbuffer-update ()
   (interactive)
   (let (active-marks)
@@ -763,6 +783,19 @@
         (goto-char (point-min))
         (dotimes (i position)
           (stumpbuffer-forward-line))))))
+
+
+;;; Entry / exit
+
+(defun stumpbuffer-quit-window ()
+  "Exit the buffer.
+
+Kills the frame if necessary."
+  (interactive)
+  (when-let ((buf (get-buffer "*StumpBuffer*")))
+    (kill-buffer buf))
+  (when stumpbuffer-kill-frame-on-exit-p
+    (delete-frame)))
 
 (defun stumpbuffer (other-frame-p kill-frame-p)
   (interactive (list nil nil))
