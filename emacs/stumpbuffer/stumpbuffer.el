@@ -440,7 +440,7 @@ signalled with the message."
   (interactive (list (getf (sb--current-group-plist) :number)))
   (stumpbuffer-mark-group group ?D))
 
-(defun stumpbuffer-get-all-window-values (field)
+(defun sb--get-all-window-values (field)
   (let (result)
     (stumpbuffer-do-windows (win)
       (when-let ((val (getf (getf win :window-plist)
@@ -452,7 +452,7 @@ signalled with the message."
   (interactive (list (or (unless current-prefix-arg
                            (getf (sb--current-window-plist) :class))
                          (completing-read "Class: "
-                                          (stumpbuffer-get-all-window-values :class)))
+                                          (sb--get-all-window-values :class)))
                      (sb--maybe-prompt-for-mark ?*)))
   (stumpbuffer-do-windows (win)
     (when (equal class (getf (getf win :window-plist) :class))
@@ -462,7 +462,7 @@ signalled with the message."
   (interactive (list (or (unless current-prefix-arg
                            (getf (sb--current-window-plist) :role))
                          (completing-read "Role: "
-                                          (stumpbuffer-get-all-window-values :role)))
+                                          (sb--get-all-window-values :role)))
                      (sb--maybe-prompt-for-mark ?*)))
   (stumpbuffer-do-windows (win)
     (when (equal role (getf (getf win :window-plist) :role))
@@ -472,7 +472,7 @@ signalled with the message."
   (interactive (list (or (unless current-prefix-arg
                            (getf (sb--current-window-plist) :instance))
                          (completing-read "Instance: "
-                                          (stumpbuffer-get-all-window-values :instance)))
+                                          (sb--get-all-window-values :instance)))
                      (sb--maybe-prompt-for-mark ?*)))
   (stumpbuffer-do-windows (win)
     (when (equal instance (getf (getf win :window-plist) :instance))
