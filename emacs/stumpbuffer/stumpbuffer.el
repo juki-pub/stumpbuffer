@@ -119,6 +119,7 @@
     (define-key map (kbd "T") 'stumpbuffer-throw-marked-windows-to-frame)
     (define-key map (kbd "s") 'stumpbuffer-split-frame-vertical)
     (define-key map (kbd "S") 'stumpbuffer-split-frame-horizontal)
+    (define-key map (kbd "RET") 'stumpbuffer-focus-frame)
     map))
 
 (defvar stumpbuffer-mode-window-map
@@ -530,6 +531,16 @@
   (when group
     (stumpbuffer-command "switch-to-group"
                          (number-to-string group))
+    (when stumpbuffer-quit-window-after-command
+      (stumpbuffer-quit-window))))
+
+(defun stumpbuffer-focus-frame (group frame)
+  (interactive (list (get-text-property (point) 'stumpbuffer-group)
+                     (get-text-property (point) 'stumpbuffer-frame-number)))
+  (when (and group frame)
+    (stumpbuffer-command "focus-frame"
+                         (number-to-string group)
+                         (number-to-string frame))
     (when stumpbuffer-quit-window-after-command
       (stumpbuffer-quit-window))))
 
