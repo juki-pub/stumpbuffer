@@ -164,6 +164,9 @@
           :end (point-at-eol)
           :group-plist (get-text-property (point) 'stumpbuffer-group-plist))))
 
+(defun stumpbuffer-current-group-plist ()
+  (getf (stumpbuffer-on-group-name) :group-plist))
+
 (defun stumpbuffer-on-frame-name ()
   (when-let ((group (get-text-property (point) 'stumpbuffer-group))
              (frame (get-text-property (point) 'stumpbuffer-frame-number)))
@@ -171,6 +174,9 @@
           :start (point-at-bol)
           :end (point-at-eol)
           :frame-plist (get-text-property (point) 'stumpbuffer-frame-plist))))
+
+(defun stumpbuffer-current-frame-plist ()
+  (getf (stumpbuffer-on-frame-name) :frame-plist))
 
 (defun stumpbuffer-on-window ()
   "If point is on a window row, return info about it."
@@ -182,6 +188,9 @@
            :window-plist (get-text-property (point) 'stumpbuffer-window-plist)
            (when-let ((mark (get-text-property (point) 'stumpbuffer-mark)))
              (list :mark mark)))))
+
+(defun stumpbuffer-current-window-plist ()
+  (getf (stumpbuffer-on-window) :window-plist))
 
 (defun stumpbuffer-map-groups (fn)
   (save-excursion
@@ -229,8 +238,8 @@
   (save-excursion
     (goto-char (point-min))
     (while (not (eobp))
-      (when (get-text-property (point) 'stumpbuffer-mark)
-        (when-let ((win (stumpbuffer-on-window)))
+      (when-let ((win (stumpbuffer-on-window)))
+        (when (getf win :mark)
           (save-excursion
             (funcall fn win))))
       (forward-line))))
@@ -269,8 +278,7 @@
 (defun stumpbuffer-mark-frame (mark)
   "If point is on a frame, mark all windows in it."
   (interactive (list ?*))
-  (when-let ((frame (stumpbuffer-on-frame-name))
-             (frame-num (getf (getf frame :frame-plist) :number)))
+  (when-let ((frame-num (getf (stumpbuffer-current-frame-plist) :number)))
     (stumpbuffer-do-group-windows (win)
       (when (= frame-num (getf (getf win :window-plist) :frame))
         (stumpbuffer-change-window-mark win mark)))
@@ -317,7 +325,7 @@
         (stumpbuffer-mark mark)))))
 
 (defun stumpbuffer-mark-by-frame (frame mark)
-  (interactive (list (getf (getf (stumpbuffer-on-window) :window-plist) :frame)
+  (interactive (list (getf (stumpbuffer-current-window-plist) :frame)
                      ?*))
   (stumpbuffer-do-group-windows (win)
     (when-let ((f (getf (getf win :window-plist) :frame)))
@@ -325,14 +333,12 @@
         (stumpbuffer-mark mark)))))
 
 (defun stumpbuffer-mark-frame-for-kill (frame)
-  (interactive (list (getf (getf (stumpbuffer-on-frame-name) :frame-plist)
-                           :number)))
+  (interactive (list (getf (stumpbuffer-current-frame-plist) :number)))
   (stumpbuffer-mark-by-frame frame ?D)
   (stumpbuffer-forward-frame))
 
 (defun stumpbuffer-mark-group-for-kill (group)
-  (interactive (list (getf (getf (stumpbuffer-on-group-name) :group-plist)
-                           :number)))
+  (interactive (list (getf (stumpbuffer-current-group-plist) :number)))
   (stumpbuffer-mark-group group ?D))
 
 (defun stumpbuffer-get-all-window-values (field)
@@ -345,8 +351,7 @@
 
 (defun stumpbuffer-mark-by-window-class (class mark)
   (interactive (list (or (unless current-prefix-arg
-                           (getf (getf (stumpbuffer-on-window) :window-plist)
-                                 :class))
+                           (getf (stumpbuffer-current-window-plist) :class))
                          (completing-read "Class: "
                                           (stumpbuffer-get-all-window-values :class)))
                      ?*))
@@ -356,8 +361,7 @@
 
 (defun stumpbuffer-mark-by-window-role (role mark)
   (interactive (list (or (unless current-prefix-arg
-                           (getf (getf (stumpbuffer-on-window) :window-plist)
-                                 :role))
+                           (getf (stumpbuffer-current-window-plist) :role))
                          (completing-read "Role: "
                                           (stumpbuffer-get-all-window-values :role)))
                      ?*))
@@ -367,8 +371,7 @@
 
 (defun stumpbuffer-mark-by-window-instance (instance mark)
   (interactive (list (or (unless current-prefix-arg
-                           (getf (getf (stumpbuffer-on-window) :window-plist)
-                                 :instance))
+                           (getf (stumpbuffer-current-window-plist) :instance))
                          (completing-read "Instance: "
                                           (stumpbuffer-get-all-window-values :instance)))
                      ?*))
@@ -412,8 +415,7 @@
     (stumpbuffer-update)))
 
 (defun stumpbuffer-kill-group (group)
-  (interactive (list (getf (getf (stumpbuffer-on-group-name) :group-plist)
-                           :number)))
+  (interactive (list (getf (stumpbuffer-current-group-plist) :number)))
   (when (and group
              (yes-or-no-p "Delete group? "))
     (stumpbuffer-command "kill-group"
@@ -421,8 +423,9 @@
     (stumpbuffer-update)))
 
 (defun stumpbuffer-kill-frame (group frame)
-  (interactive (list (get-text-property (point) 'stumpbuffer-group)
-                     (get-text-property (point) 'stumpbuffer-frame-number)))
+  (interactive (let ((on-frame (stumpbuffer-on-frame-name)))
+                 (list (getf on-frame :group)
+                       (getf (getf on-frame :frame-plist) :number))))
   (when (and group frame)
     (stumpbuffer-command "kill-frame"
                          (number-to-string group)
@@ -430,8 +433,9 @@
     (stumpbuffer-update)))
 
 (defun stumpbuffer-split-frame-vertical (group frame)
-  (interactive (list (get-text-property (point) 'stumpbuffer-group)
-                     (get-text-property (point) 'stumpbuffer-frame-number)))
+  (interactive (let ((on-frame (stumpbuffer-on-frame-name)))
+                 (list (getf on-frame :group)
+                       (getf (getf on-frame :frame-plist) :number))))
   (when (and group frame)
     (stumpbuffer-command "split-frame"
                          (number-to-string group)
@@ -440,8 +444,9 @@
     (stumpbuffer-update)))
 
 (defun stumpbuffer-split-frame-horizontal (group frame)
-  (interactive (list (get-text-property (point) 'stumpbuffer-group)
-                     (get-text-property (point) 'stumpbuffer-frame-number)))
+  (interactive (let ((on-frame (stumpbuffer-on-frame-name)))
+                 (list (getf on-frame :group)
+                       (getf (getf on-frame :frame-plist) :number))))
   (when (and group frame)
     (stumpbuffer-command "split-frame"
                          (number-to-string group)
@@ -517,11 +522,10 @@
   (beginning-of-line))
 
 (defun stumpbuffer-rename-group (group new-name)
-  (interactive (list (get-text-property (point) 'stumpbuffer-group-number)
-                     (read-string (format "Rename '%s': "
-                                          (getf (get-text-property
-                                                 (point) 'stumpbuffer-group-plist)
-                                                :name)))))
+  (interactive (let ((gplist (stumpbuffer-current-group-plist)))
+                 (list (getf gplist :number)
+                       (read-string (format "Rename '%s': "
+                                            (getf gplist :name))))))
   (when group
     (stumpbuffer-command "rename-group"
                          (number-to-string group)
@@ -529,12 +533,10 @@
   (stumpbuffer-update))
 
 (defun stumpbuffer-rename-window (window-id new-name)
-  (interactive (list (getf (get-text-property (point) 'stumpbuffer-window-plist)
-                           :id)
-                     (read-string (format "Rename '%s': "
-                                          (getf (get-text-property
-                                                 (point) 'stumpbuffer-window-plist)
-                                                :title)))))
+  (interactive (let ((wplist (stumpbuffer-current-window-plist)))
+                 (list (getf wplist :id)
+                       (read-string (format "Rename '%s': "
+                                            (getf wplist :title))))))
   (when window-id
     (stumpbuffer-command "rename-window"
                          (number-to-string window-id)
@@ -542,7 +544,7 @@
   (stumpbuffer-update))
 
 (defun stumpbuffer-switch-to-group (group)
-  (interactive (list (get-text-property (point) 'stumpbuffer-group-number)))
+  (interactive (list (getf (stumpbuffer-current-group-plist) :number)))
   (when group
     (stumpbuffer-command "switch-to-group"
                          (number-to-string group))
@@ -550,8 +552,9 @@
       (stumpbuffer-quit-window))))
 
 (defun stumpbuffer-focus-frame (group frame)
-  (interactive (list (get-text-property (point) 'stumpbuffer-group)
-                     (get-text-property (point) 'stumpbuffer-frame-number)))
+  (interactive (let ((frame (stumpbuffer-on-frame-name)))
+                 (list (getf frame :group)
+                       (getf (getf frame :frame-plist) :number))))
   (when (and group frame)
     (stumpbuffer-command "focus-frame"
                          (number-to-string group)
@@ -560,8 +563,9 @@
       (stumpbuffer-quit-window))))
 
 (defun stumpbuffer-focus-window (group window)
-  (interactive (list (get-text-property (point) 'stumpbuffer-group)
-                     (get-text-property (point) 'stumpbuffer-window-id)))
+  (interactive (let ((win (stumpbuffer-on-window)))
+                 (list (getf win :group)
+                       (getf (getf win :window-plist) :id))))
   (when (and group window)
     (stumpbuffer-command "focus-window"
                          (number-to-string group)
@@ -592,7 +596,7 @@
           (stumpbuffer-quit-window))))))
 
 (defun stumpbuffer-throw-marked-windows-to-group (group-number)
-  (interactive (list (get-text-property (point) 'stumpwm-group-number)))
+  (interactive (list (getf (stumpbuffer-current-group-plist) :number)))
   (let ((target (number-to-string group-number)))
     (stumpbuffer-do-marked-windows (win)
       (stumpbuffer-command "throw-window-to-group"
@@ -601,8 +605,9 @@
   (stumpbuffer-update))
 
 (defun stumpbuffer-throw-marked-windows-to-frame (group frame)
-  (interactive (list (get-text-property (point) 'stumpbuffer-group)
-                     (get-text-property (point) 'stumpbuffer-frame-number)))
+  (interactive (let ((frame (stumpbuffer-on-frame-name)))
+                 (list (getf frame :group)
+                       (getf (getf frame :frame-plist) :number))))
   (when-let ((target-group (number-to-string group))
              (target-frame (number-to-string frame)))
     (stumpbuffer-do-marked-windows (win)
@@ -613,7 +618,7 @@
   (stumpbuffer-update))
 
 (defun stumpbuffer-throw-marked-windows (target-window-id)
-  (interactive (list (get-text-property (point) 'stumpbuffer-window-id)))
+  (interactive (list (getf (stumpbuffer-current-window-plist) :id)))
   (when-let ((target-window (number-to-string target-window-id)))
     (stumpbuffer-do-marked-windows (win)
       (stumpbuffer-command "throw-window"
