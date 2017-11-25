@@ -728,13 +728,13 @@
       (dotimes (i position)
         (stumpbuffer-forward-line)))))
 
-(defun stumpbuffer (other-frame-p)
-  (interactive (list nil))
+(defun stumpbuffer (other-frame-p kill-frame-p)
+  (interactive (list nil nil))
   (let ((buffer (get-buffer-create "*StumpBuffer*")))
     (if other-frame-p
         (switch-to-buffer-other-frame buffer)
       (switch-to-buffer buffer)))
-  (setq stumpbuffer-kill-frame-on-exit-p other-frame-p)
+  (setq stumpbuffer-kill-frame-on-exit-p kill-frame-p)
   (stumpbuffer-mode)
   (stumpbuffer-update)
   (unwind-protect
@@ -745,7 +745,7 @@
 
 (defun stumpbuffer-other-frame ()
   (interactive)
-  (stumpbuffer t))
+  (stumpbuffer t t))
 
 (define-derived-mode stumpbuffer-mode special-mode "StumpBuffer"
   "A major mode for controlling Stumpwm."
