@@ -909,12 +909,10 @@ Kills the frame if necessary."
 
 ;;; Filter/face utilities
 
-(defun stumpbuffer-filter-hidden-groups (group)
-  "Filter hidden groups."
+(defun stumpbuffer-group-hidden-p (group)
   (getf group :hiddenp))
 
-(defun stumpbuffer-filter-hidden-windows (window)
-  "Filter hidden (iconified) windows."
+(defun stumpbuffer-window-hidden-p (window)
   (getf window :hiddenp))
 
 (defun stumpbuffer-window-visible-p (window)
