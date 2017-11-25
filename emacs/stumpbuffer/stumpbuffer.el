@@ -776,15 +776,12 @@ With a prefix argument this also focuses the window."
                                         "")))
                        (len (length entry)))
                   (insert (if width
-                              (if (> len width)
-                                  (format (concat "%-"
-                                                  (number-to-string (- width 3))
-                                                  "."
-                                                  (number-to-string (- width 3))
-                                                  "s...")
-                                          entry)
-                                (format (concat "%-" (number-to-string width) "s")
-                                        entry))
+                              (format (if (> len width)
+                                          (format "%%-%d.%ds..."
+                                                  (- width 3)
+                                                  (- width 3))
+                                        (format "%%-%ds" width))
+                                      entry)
                             entry))))
               (insert " "))
             (point))
