@@ -168,7 +168,10 @@
                          (current-group))))
       (if (null to-group)
           (error "Only one group left.")
-          (kill-group group to-group)))))
+          (progn
+            (when (eql group (current-group))
+              (gselect to-group))
+            (kill-group group to-group))))))
 
 (defcommand stumpbuffer-rename-window (group-num window-num new-name)
     ((:number "Group number: ")
