@@ -231,6 +231,8 @@ respectively."
                     (process-custom-fields *window-data-fields* window)))
            (frame-plist (group frame)
              (list* :number (frame-number frame)
+                    :width (frame-width frame)
+                    :height (frame-height frame)
                     :windows (sort
                               (mapcar #'window-plist (frame-windows group frame))
                               #'< :key #'number)

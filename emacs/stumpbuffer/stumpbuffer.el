@@ -68,6 +68,16 @@
   :type 'face
   :group 'stumpbuffer)
 
+(defcustom stumpbuffer-frame-size-face 'shadow
+  "Face used for the frame size."
+  :type 'face
+  :group 'stumpbuffer)
+
+(defcustom stumpbuffer-show-frame-size-p nil
+  "Should frame size be shown?"
+  :type 'boolean
+  :group 'stumpbuffer)
+
 (defcustom stumpbuffer-marked-face 'warning
   "Face used for marked windows."
   :type 'face
@@ -804,6 +814,17 @@ With a prefix argument this also focuses the window."
                 face ,stumpbuffer-frame-face
                 stumpbuffer-frame-number ,number
                 stumpbuffer-frame-plist ,frame-plist))
+      (when stumpbuffer-show-frame-size-p
+        (add-text-properties
+         (point)
+         (progn (insert " (" (number-to-string (getf frame-plist :width))
+                        "x" (number-to-string (getf frame-plist :height))
+                        ")")
+                (point))
+         `(keymap ,stumpbuffer-mode-frame-map
+                  face ,stumpbuffer-frame-size-face
+                  stumpbuffer-frame-number ,number
+                  stumpbuffer-frame-plist ,frame-plist)))
       (insert "\n"))
     (unless (null windows)
       (put-text-property
