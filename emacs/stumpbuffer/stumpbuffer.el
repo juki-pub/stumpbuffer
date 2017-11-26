@@ -129,6 +129,7 @@
     (define-key map (kbd "q") 'stumpbuffer-quit-window)
     (define-key map (kbd "P") 'stumpbuffer-pull-windows)
     (define-key map (kbd "*") 'stumpbuffer-change-marks)
+    (define-key map (kbd "f") 'stumpbuffer-toggle-frame-showing)
     map))
 
 (defvar stumpbuffer-mode-group-map
@@ -743,6 +744,11 @@ With a prefix argument this also focuses the window."
         (stumpbuffer-focus-window (getf twindow :group)
                                   target-window-id)))))
 
+(defun stumpbuffer-toggle-frame-showing ()
+  (interactive)
+  (setq stumpbuffer-show-frames-p (not stumpbuffer-show-frames-p))
+  (stumpbuffer-update))
+
 
 ;;; Retrieving data and updating
 
@@ -931,7 +937,8 @@ can be used to open a buffer from outside emacs."
   (hl-line-mode)
   (set (make-local-variable 'stumpbuffer-kill-frame-on-exit-p) nil)
   (make-local-variable 'stumpbuffer-group-filters)
-  (make-local-variable 'stumpbuffer-window-filters))
+  (make-local-variable 'stumpbuffer-window-filters)
+  (make-local-variable 'stumpbuffer-show-frames-p))
 
 
 ;;; Filter/face utilities
