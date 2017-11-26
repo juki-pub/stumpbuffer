@@ -161,6 +161,11 @@
 
 ;;; Executing commands
 
+(defun sb--process-arg (arg)
+  (if (position ?\s arg)
+      (format "\"%s\"" arg)
+    arg))
+
 (defun stumpbuffer-command (command &rest args)
   "Execute a Stumpwm command.
 
@@ -171,14 +176,15 @@ be the return value.
 As a simple error handling mechanism, the command may return a
 two element list `(:error msg)`. An Emacs error will be
 signalled with the message."
-  (let ((output (get-buffer-create "*stumpbuffer-data*")))
+  (with-temp-buffer
     (apply #'call-process stumpbuffer-stumpish-command
-           nil output nil
-           (concat "stumpbuffer-" command) args)
-    (unless (zerop (buffer-size output))
-      (let ((m (set-marker (make-marker) 1 output)))
+           nil t nil
+           (concat "stumpbuffer-" command)
+           (mapcar #'sb--process-arg args))
+    (unless (zerop (buffer-size))
+      (let ((m (set-marker (make-marker) 1)))
         (when-let (result (prog1 (read m)
-                            (kill-buffer "*stumpbuffer-data*")))
+                            (kill-buffer)))
           (if (and (listp result)
                    (eql :error (first result)))
               (error "StumpBuffer error: %s" (second result))
