@@ -776,61 +776,67 @@ With a prefix argument this also focuses the window."
   (some (lambda (filter) (funcall filter window))
         stumpbuffer-window-filters))
 
+(defmacro sb--with-properties (properties &rest body)
+  "Add properties to text inserted by the body."
+  (declare (indent 1))
+  `(add-text-properties (point)
+                        (progn ,@body
+                               (point))
+                        ,properties))
+
+(defmacro sb--with-property (property value &rest body)
+  "Add a property to text inserted by the body."
+  (declare (indent 2))
+  `(put-text-property (point)
+                      (progn ,@body
+                             (point))
+                      ,property ,value))
+
 (defun sb--insert-window (window-plist)
   (unless (sb--filter-window-p window-plist)
-    (add-text-properties
-     (point)
-     (progn (insert "    ")
-            (dolist (field stumpbuffer-window-format)
-              (destructuring-bind (field &optional width title)
-                  field
-                (let* ((entry (format "%s"
-                                      (if-let ((value (getf window-plist field)))
-                                          (if (eql value t)
-                                              (string stumpbuffer-window-field-t-character)
-                                            value)
-                                        "")))
-                       (len (length entry)))
-                  (insert (if width
-                              (format (if (> len width)
-                                          (format "%%-%d.%ds..."
-                                                  (- width 3)
-                                                  (- width 3))
-                                        (format "%%-%ds" width))
-                                      entry)
-                            entry))))
-              (insert " "))
-            (point))
-     `(keymap ,stumpbuffer-mode-window-map
-              stumpbuffer-window ,(getf window-plist :number)
-              stumpbuffer-window-id ,(getf window-plist :id)
-              stumpbuffer-window-plist ,window-plist
-              face ,(sb--get-window-face window-plist)))
+    (sb--with-properties
+        (list 'keymap                    stumpbuffer-mode-window-map
+              'stumpbuffer-window        (getf window-plist :number)
+              'stumpbuffer-window-id     (getf window-plist :id)
+              'stumpbuffer-window-plist  window-plist
+              'face                      (sb--get-window-face window-plist))
+      (insert "    ")
+      (dolist (field stumpbuffer-window-format)
+        (destructuring-bind (field &optional width title)
+            field
+          (let* ((entry (format "%s"
+                                (if-let ((value (getf window-plist field)))
+                                    (if (eql value t)
+                                        (string stumpbuffer-window-field-t-character)
+                                      value)
+                                  "")))
+                 (len (length entry)))
+            (insert (if width
+                        (format (if (> len width)
+                                    (format "%%-%d.%ds..."
+                                            (- width 3)
+                                            (- width 3))
+                                  (format "%%-%ds" width))
+                                entry)
+                      entry))))
+        (insert " ")))
     (insert "\n")))
 
 (defun sb--insert-frame (frame-plist)
   (destructuring-bind (&key number windows &allow-other-keys)
       frame-plist
     (when stumpbuffer-show-frames-p
-      (add-text-properties
-       (point)
-       (progn (insert "Frame " (number-to-string number))
-              (point))
-       `(keymap ,stumpbuffer-mode-frame-map
-                face ,stumpbuffer-frame-face
-                stumpbuffer-frame-number ,number
-                stumpbuffer-frame-plist ,frame-plist))
-      (when stumpbuffer-show-frame-size-p
-        (add-text-properties
-         (point)
-         (progn (insert " (" (number-to-string (getf frame-plist :width))
-                        "x" (number-to-string (getf frame-plist :height))
-                        ")")
-                (point))
-         `(keymap ,stumpbuffer-mode-frame-map
-                  face ,stumpbuffer-frame-size-face
-                  stumpbuffer-frame-number ,number
-                  stumpbuffer-frame-plist ,frame-plist)))
+      (sb--with-properties
+          (list 'keymap                    stumpbuffer-mode-frame-map
+                'stumpbuffer-frame-number  number
+                'stumpbuffer-frame-plist   frame-plist)
+        (sb--with-property 'face stumpbuffer-frame-face
+          (insert "Frame " (number-to-string number)))
+        (when stumpbuffer-show-frame-size-p
+          (sb--with-property 'face stumpbuffer-frame-size-face
+            (insert " (" (number-to-string (getf frame-plist :width))
+                    " x " (number-to-string (getf frame-plist :height))
+                    ")"))))
       (insert "\n"))
     (unless (null windows)
       (put-text-property
@@ -847,28 +853,23 @@ With a prefix argument this also focuses the window."
   (unless (sb--filter-group-p group-plist)
     (destructuring-bind (&key number name frames type &allow-other-keys)
         group-plist
-      (add-text-properties
-       (point)
-       (progn (insert "[ ")
-              (when number
-                (insert (number-to-string number) " "))
-              (when name
-                (insert name))
-              (insert " ]")
-              (when (eql type :float)
-                (insert " Float groups don't work yet!"))
-              (point))
-       `(keymap ,stumpbuffer-mode-group-map
-                face ,stumpbuffer-group-face
-                stumpbuffer-group-number ,number
-                stumpbuffer-group-plist ,group-plist))
+      (sb--with-properties
+          (list 'keymap                    stumpbuffer-mode-group-map
+                'face                      stumpbuffer-group-face
+                'stumpbuffer-group-number  number
+                'stumpbuffer-group-plist   group-plist)
+        (insert "[ ")
+        (when number
+          (insert (number-to-string number) " "))
+        (when name
+          (insert name))
+        (insert " ]")
+        (when (eql type :float)
+          (insert " Float groups don't work yet!")))
       (insert "\n")
       (unless (null frames)
-        (put-text-property
-         (point)
-         (progn (mapc #'sb--insert-frame frames)
-                (point))
-         'stumpbuffer-group number)))))
+        (sb--with-property 'stumpbuffer-group number
+          (mapc #'sb--insert-frame frames))))))
 
 (defun stumpbuffer-update ()
   (interactive)
@@ -880,11 +881,10 @@ With a prefix argument this also focuses the window."
               active-marks)))
     (let ((position (count-lines (point-min) (point))))
       (unwind-protect
-          (progn
-            (setq buffer-read-only nil)
-            (erase-buffer)
-            (sb--set-header)
-            (mapc #'sb--insert-group (sb--get-data)))
+          (progn (setq buffer-read-only nil)
+                 (erase-buffer)
+                 (sb--set-header)
+                 (mapc #'sb--insert-group (sb--get-data)))
         (setq buffer-read-only t)
         (when active-marks
           (stumpbuffer-do-windows (win)
