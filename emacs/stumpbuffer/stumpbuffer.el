@@ -102,8 +102,9 @@ Only set to T if your Stumpwm supports that."
 (defvar stumpbuffer-group-name-format
   '((font-lock-keyword-face
      "[ " :number " " :name " ]"
-     (:eval (when (eql type :float)
-              " Float groups don't work yet!")))))
+     (:call (lambda (plist)
+              (when (eql (getf plist :type) :float)
+                " Float groups don't work yet!"))))))
 
 (defvar stumpbuffer-mode-map
   (let ((map (make-keymap)))
@@ -887,8 +888,8 @@ With a prefix argument this also focuses the window."
         (dolist (thing things)
           (typecase thing
             (list
-             (when (eql (first thing) :eval)
-               (when-let ((value (eval (second thing))))
+             (when (eql (first thing) :call)
+               (when-let ((value (funcall (second thing) plist)))
                  (insert value))))
             (string (insert thing))
             (keyword
