@@ -77,6 +77,24 @@
   be a custom function to format the fields value. The function takes
   a single argument -- the value -- and returns a string that should
   be shown in its place.
+
+  The variables ~stumpbuffer-frame-name-format~ and
+  ~stumpbuffer-group-name-format~ control the format of frame and
+  group names. They should be lists of lists in form
+
+  #+BEGIN_EXAMPLE
+  ((faces . things)
+   ...)
+  #+END_EXAMPLE
+
+  Where ~faces~ is the name of a face or a list of face
+  names. ~things~ is a list of things to insert. They can be
+
+  - Strings :: Inserted as they are.
+  - Keywords :: The key is looked up in the frame or group plist
+                retrieved from Stumpwm.
+  - A list ~(:call fn)~ :: Call ~fn~ with the plist. If it returns
+       ~nil~, insert nothing. Otherwise insert the result.
   
 * Extending
 
