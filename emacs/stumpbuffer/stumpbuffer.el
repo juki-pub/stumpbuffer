@@ -149,6 +149,7 @@ Only set to T if your Stumpwm supports that."
     (define-key map (kbd "N") 'stumpbuffer-rename-group)
     (define-key map (kbd "D") 'stumpbuffer-kill-group)
     (define-key map (kbd "d") 'stumpbuffer-mark-group-for-kill)
+    (define-key map (kbd "r") 'stumpbuffer-renumber-group)
     map))
 
 (defvar stumpbuffer-mode-frame-map
@@ -666,6 +667,16 @@ is short for
                                             (getf wplist :number))))))
   (when (and window-id new-number)
     (stumpbuffer-command "renumber-window" window-id new-number))
+  (stumpbuffer-update))
+
+(defun stumpbuffer-renumber-group (group new-number)
+  (interactive (let ((gplist (sb--current-group-plist)))
+                 (list (getf gplist :number)
+                       (read-string (format "Renumber '%s' from %d to: "
+                                            (getf gplist :name)
+                                            (getf gplist :number))))))
+  (when (and group new-number)
+    (stumpbuffer-command "renumber-group" group new-number))
   (stumpbuffer-update))
 
 (defun stumpbuffer-switch-to-group (group)

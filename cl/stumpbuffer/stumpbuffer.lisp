@@ -219,6 +219,17 @@ respectively."
           (setf (window-number old-window) current-number
                 (window-number window) new-number)))))
 
+(defcommand stumpbuffer-renumber-group (group-num new-number)
+    ((:number "Group number: ")
+     (:number "New number: "))
+  (with-simple-error-handling
+    (let* ((group (find-group-by-number group-num))
+           (old-group (ignore-errors
+                       (find-group-by-number new-number))))
+      (if (null old-group)
+          (setf (group-number group) new-number)
+          (setf (group-number old-group) group-num
+                (group-number group) new-number)))))
 
 (defvar *window-data-fields* nil)
 (defvar *group-data-fields* nil)

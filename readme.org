@@ -71,6 +71,7 @@
   | ~S~       | Split frame horizontally (only when point on frame name or window)                      |
   | ~C~       | Create new group (takes marked windows with it)                                         |
   | ~f~       | Toggle frame name display                                                               |
+  | ~r~       | Renumber group or window                                                                |
 
 * Extending
 
