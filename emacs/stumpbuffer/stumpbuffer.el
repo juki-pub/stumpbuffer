@@ -101,10 +101,10 @@ Only set to T if your Stumpwm supports that."
 
 (defvar stumpbuffer-group-name-format
   '((font-lock-keyword-face
-     "[ " :number " " :name " ]"
-     (:call (lambda (plist)
-              (when (eql (getf plist :type) :float)
-                " Float groups don't work yet!"))))))
+     "[ " :number " " :name " ]")
+    (warning (:call (lambda (plist)
+                      (when (eql (getf plist :type) :float)
+                        " Float groups don't work yet!"))))))
 
 (defvar stumpbuffer-mode-map
   (let ((map (make-keymap)))
