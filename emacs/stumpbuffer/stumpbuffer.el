@@ -1009,7 +1009,8 @@ With a prefix argument this also focuses the window."
         (push (cons (cl-getf (cl-getf win :window-plist) :id)
                     mark)
               active-marks)))
-    (let ((position (count-lines (point-min) (point))))
+    (let ((window-id (cl-getf (sb--current-window-plist) :id))
+          (position (count-lines (point-min) (point))))
       (unwind-protect
           (progn (setq buffer-read-only nil)
                  (erase-buffer)
@@ -1021,9 +1022,18 @@ With a prefix argument this also focuses the window."
             (when-let ((id (cl-getf (cl-getf win :window-plist) :id))
                        (mark (cdr (assoc id active-marks))))
               (stumpbuffer-mark mark))))
-        (goto-char (point-min))
-        (dotimes (i position)
-          (stumpbuffer-forward-line))))))
+        (cond
+         ((and window-id
+               (let (position)
+                 (cl-block nil
+                   (stumpbuffer-do-windows (win)
+                     (when (= window-id (cl-getf (cl-getf win :window-plist) :id))
+                       (setq position (point))
+                       (cl-return))))
+                 (when position (goto-char position)))))
+         (t (goto-char (point-min))
+            (dotimes (i position)
+              (stumpbuffer-forward-line))))))))
 
 
 ;;; Entry / exit
