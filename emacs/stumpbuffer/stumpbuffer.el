@@ -101,8 +101,8 @@ Only set to T if your Stumpwm supports that."
                       (when (eql (getf plist :type) :float)
                         " Float groups don't work yet!"))))))
 
-(defvar stumpbuffer-active-filter-group nil)
-(defvar stumpbuffer-active-filter-group-n 0)
+(defvar sb--active-filter-group nil)
+(defvar sb--active-filter-group-n 0)
 
 (defvar stumpbuffer-filter-groups
   '(()
@@ -813,12 +813,12 @@ With a prefix argument this also focuses the window."
 (defun stumpbuffer-cycle-filter-groups (n)
   (interactive "P")
   (let* ((n (or n 1)))
-    (setq stumpbuffer-active-filter-group-n
-          (mod (+ stumpbuffer-active-filter-group-n n)
+    (setq sb--active-filter-group-n
+          (mod (+ sb--active-filter-group-n n)
                (length stumpbuffer-filter-groups))
           
-          stumpbuffer-active-filter-group
-          (nth stumpbuffer-active-filter-group-n
+          sb--active-filter-group
+          (nth sb--active-filter-group-n
                stumpbuffer-filter-groups)))
   (stumpbuffer-update))
 
@@ -855,7 +855,7 @@ With a prefix argument this also focuses the window."
             (case what
               (:hide-windows (sb--match-filter how group))
               (:show-windows (not (sb--match-filter how group))))))
-        stumpbuffer-active-filter-group))
+        sb--active-filter-group))
 
 (defmacro sb--with-properties (properties &rest body)
   "Add properties to text inserted by the body."
@@ -945,7 +945,7 @@ With a prefix argument this also focuses the window."
             (case what
               (:hide-groups (sb--match-filter how group))
               (:show-groups (not (sb--match-filter how group))))))
-        stumpbuffer-active-filter-group))
+        sb--active-filter-group))
 
 (defun sb--insert-group (group-plist)
   (unless (sb--filter-group-p group-plist)
@@ -1029,9 +1029,10 @@ can be used to open a buffer from outside emacs."
   (make-local-variable 'stumpbuffer-group-filters)
   (make-local-variable 'stumpbuffer-window-filters)
   (make-local-variable 'stumpbuffer-show-frames-p)
-  (make-local-variable 'stumpbuffer-active-filter-group-n)
-  (set (make-local-variable 'stumpbuffer-active-filter-group)
-       (nth stumpbuffer-active-filter-group-n
+  (make-local-variable 'stumpbuffer-filter-groups)
+  (make-local-variable 'sb--active-filter-group-n)
+  (set (make-local-variable 'sb--active-filter-group)
+       (nth sb--active-filter-group-n
             stumpbuffer-filter-groups)))
 
 
