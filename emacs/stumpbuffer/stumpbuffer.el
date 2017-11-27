@@ -88,6 +88,13 @@
   :type 'character
   :group 'stumpbuffer)
 
+(defcustom stumpbuffer-stumpish-quote-arguments-with-spaces-p nil
+  "Should arguments with spaces be quoted?
+
+Only set to T if your Stumpwm supports that."
+  :type 'boolean
+  :group 'stumpbuffer)
+
 (defvar stumpbuffer-kill-frame-on-exit-p nil)
 
 (defvar stumpbuffer-window-format '((:number 3 "N")
@@ -174,7 +181,8 @@
 
 (defun sb--process-arg (arg)
   (typecase arg
-    (string (if (position ?\s arg)
+    (string (if (and stumpbuffer-stumpish-quote-arguments-with-spaces-p
+                     (position ?\s arg))
                 (format "\"%s\"" (replace-regexp-in-string "\"" "\\\\\"" arg))
               arg))
     (number (number-to-string arg))))
