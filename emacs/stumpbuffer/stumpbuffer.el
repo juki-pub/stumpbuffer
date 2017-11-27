@@ -74,11 +74,6 @@
   :type 'face
   :group 'stumpbuffer)
 
-(defcustom stumpbuffer-show-frame-size-p nil
-  "Should frame size be shown?"
-  :type 'boolean
-  :group 'stumpbuffer)
-
 (defcustom stumpbuffer-marked-face 'warning
   "Face used for marked windows."
   :type 'face
@@ -114,6 +109,10 @@ Only set to T if your Stumpwm supports that."
   "A list of functions to filter groups.")
 (defvar stumpbuffer-window-filters nil
   "A list of functions to filter windows.")
+
+(defvar stumpbuffer-frame-name-format
+  `((,stumpbuffer-frame-face "Frame " :number)
+    (,stumpbuffer-frame-size-face " (" :width " x " :height ")")))
 
 (defvar stumpbuffer-mode-map
   (let ((map (make-keymap)))
@@ -890,6 +889,23 @@ With a prefix argument this also focuses the window."
         (insert " ")))
     (insert "\n")))
 
+(defun sb--insert-format (plist format)
+  (dolist (part format)
+    (destructuring-bind (faces &rest things) part
+      (sb--with-property 'face faces
+        (dolist (thing things)
+          (typecase thing
+            (list
+             (when (eql (first thing) :eval)
+               (when-let ((value (eval (second thing))))
+                 (insert value))))
+            (string (insert thing))
+            (keyword
+             (let ((value (getf plist thing "")))
+               (typecase value
+                 (string (insert value))
+                 (number (insert (number-to-string value))))))))))))
+
 (defun sb--insert-frame (frame-plist)
   (destructuring-bind (&key number windows &allow-other-keys)
       frame-plist
@@ -898,13 +914,7 @@ With a prefix argument this also focuses the window."
           (list 'keymap                    stumpbuffer-mode-frame-map
                 'stumpbuffer-frame-number  number
                 'stumpbuffer-frame-plist   frame-plist)
-        (sb--with-property 'face stumpbuffer-frame-face
-          (insert "Frame " (number-to-string number)))
-        (when stumpbuffer-show-frame-size-p
-          (sb--with-property 'face stumpbuffer-frame-size-face
-            (insert " (" (number-to-string (getf frame-plist :width))
-                    " x " (number-to-string (getf frame-plist :height))
-                    ")"))))
+        (sb--insert-format frame-plist stumpbuffer-frame-name-format))
       (insert "\n"))
     (unless (null windows)
       (put-text-property
