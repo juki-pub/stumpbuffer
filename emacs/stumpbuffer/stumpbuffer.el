@@ -171,6 +171,8 @@ Only set to T if your Stumpwm supports that."
     (define-key map (kbd "D") 'stumpbuffer-kill-and-update)
     (define-key map (kbd "T") 'stumpbuffer-throw-marked-windows)
     (define-key map (kbd "N") 'stumpbuffer-rename-window)
+    (define-key map (kbd "s") 'stumpbuffer-split-window-frame-vertical)
+    (define-key map (kbd "S") 'stumpbuffer-split-window-frame-horizontal)
     map))
 
 (defvar stumpbuffer-mark-functions
@@ -240,8 +242,10 @@ signalled with the message."
 (defun stumpbuffer-on-window ()
   "If point is on a window row, return info about it."
   (when-let ((group (get-text-property (point) 'stumpbuffer-group))
+             (frame (get-text-property (point) 'stumpbuffer-frame))
              (window (get-text-property (point) 'stumpbuffer-window)))
     (list* :group group
+           :frame frame
            :start (point-at-bol)
            :end (point-at-eol)
            :window-plist (get-text-property (point) 'stumpbuffer-window-plist)
@@ -610,8 +614,7 @@ is short for
                  (list (getf on-frame :group)
                        (getf (getf on-frame :frame-plist) :number))))
   (when (and group frame)
-    (stumpbuffer-command "split-frame" group frame
-                         "2")
+    (stumpbuffer-command "split-frame" group frame "2")
     (stumpbuffer-update)))
 
 (defun stumpbuffer-split-frame-horizontal (group frame)
@@ -619,9 +622,22 @@ is short for
                  (list (getf on-frame :group)
                        (getf (getf on-frame :frame-plist) :number))))
   (when (and group frame)
-    (stumpbuffer-command "split-frame" group frame
-                         "1")
+    (stumpbuffer-command "split-frame" group frame "1")
     (stumpbuffer-update)))
+
+(defun stumpbuffer-split-window-frame-vertical (window)
+  (interactive (list (stumpbuffer-on-window)))
+  (when window
+    (when-let ((group (getf window :group))
+               (frame (getf window :frame)))
+      (stumpbuffer-split-frame-vertical group frame))))
+
+(defun stumpbuffer-split-window-frame-horizontal (window)
+  (interactive (list (stumpbuffer-on-window)))
+  (when window
+    (when-let ((group (getf window :group))
+               (frame (getf window :frame)))
+      (stumpbuffer-split-frame-horizontal group frame))))
 
 (defun stumpbuffer-rename-group (group new-name)
   (interactive (let ((gplist (sb--current-group-plist)))
