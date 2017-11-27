@@ -175,7 +175,7 @@
 (defun sb--process-arg (arg)
   (typecase arg
     (string (if (position ?\s arg)
-                (format "\"%s\"" arg)
+                (format "\"%s\"" (replace-regexp-in-string "\"" "\\\\\"" arg))
               arg))
     (number (number-to-string arg))))
 
