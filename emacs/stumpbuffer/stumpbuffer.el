@@ -834,7 +834,7 @@ With a prefix argument this also focuses the window."
   (let ((header (with-output-to-string
                   (princ "  M ")
                   (dolist (field stumpbuffer-window-format)
-                    (destructuring-bind (field &optional width title)
+                    (destructuring-bind (field &optional width title format-fn)
                         field
                       (let* ((title (or title (symbol-name field)))
                              (len (length title))
