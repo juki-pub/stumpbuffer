@@ -925,7 +925,6 @@ With a prefix argument this also focuses the window."
         group-plist
       (sb--with-properties
           (list 'keymap                    stumpbuffer-mode-group-map
-                'face                      stumpbuffer-group-face
                 'stumpbuffer-group-number  number
                 'stumpbuffer-group-plist   group-plist)
         (sb--insert-format group-plist stumpbuffer-group-name-format))
