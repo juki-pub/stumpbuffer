@@ -66,6 +66,11 @@
   :type 'face
   :group 'stumpbuffer)
 
+(defcustom stumpbuffer-float-title-face 'font-lock-function-name-face
+  "Face used for the 'floats' title line."
+  :type 'face
+  :group 'stumpbuffer)
+
 (defcustom stumpbuffer-window-field-t-character ?✓
   "The character to use for `t` values in window fields."
   :type 'character
@@ -98,10 +103,15 @@ Only set to T if your Stumpwm supports that."
 
 (defvar stumpbuffer-group-name-format
   '((font-lock-keyword-face
-     "[ " :number " " :name " ]")
+     "[ " :number " " :name)
     (warning (:call (lambda (plist)
                       (when (eql (cl-getf plist :type) :float)
-                        " Float groups don't work yet!"))))))
+                        " Float"))))
+    (font-lock-keyword-face " ]")
+    ;; (warning (:call (lambda (plist)
+    ;;                   (when (eql (cl-getf plist :type) :float)
+    ;;                     " Float groups don't work yet!"))))
+    ))
 
 (defvar sb--active-filter-group nil)
 (defvar sb--active-filter-group-n 0)
@@ -248,16 +258,16 @@ signalled with the message."
 
 (defun stumpbuffer-on-window ()
   "If point is on a window row, return info about it."
-  (when-let ((group (get-text-property (point) 'stumpbuffer-group))
-             (frame (get-text-property (point) 'stumpbuffer-frame))
-             (window (get-text-property (point) 'stumpbuffer-window)))
-    (list* :group group
-           :frame frame
-           :start (point-at-bol)
-           :end (point-at-eol)
-           :window-plist (get-text-property (point) 'stumpbuffer-window-plist)
-           (when-let ((mark (get-text-property (point) 'stumpbuffer-mark)))
-             (list :mark mark)))))
+  (when-let ((window (get-text-property (point) 'stumpbuffer-window)))
+    (let ((group (get-text-property (point) 'stumpbuffer-group))
+          (frame (get-text-property (point) 'stumpbuffer-frame)))
+      (list* :group group
+             :frame frame
+             :start (point-at-bol)
+             :end (point-at-eol)
+             :window-plist (get-text-property (point) 'stumpbuffer-window-plist)
+             (when-let ((mark (get-text-property (point) 'stumpbuffer-mark)))
+               (list :mark mark))))))
 
 (defun sb--current-window-plist ()
   (cl-getf (stumpbuffer-on-window) :window-plist))
@@ -973,7 +983,7 @@ With a prefix argument this also focuses the window."
 
 (defun sb--insert-group (group-plist)
   (unless (sb--filter-group-p group-plist)
-    (destructuring-bind (&key number name frames type &allow-other-keys)
+    (destructuring-bind (&key number name frames windows type &allow-other-keys)
         group-plist
       (sb--with-properties
           (list 'keymap                    stumpbuffer-mode-group-map
@@ -983,7 +993,13 @@ With a prefix argument this also focuses the window."
       (insert "\n")
       (unless (null frames)
         (sb--with-property 'stumpbuffer-group number
-          (mapc #'sb--insert-frame frames))))))
+          (mapc #'sb--insert-frame frames)))
+      (unless (null windows)
+        (when stumpbuffer-show-frames-p
+          (sb--with-property 'face stumpbuffer-float-title-face
+           (insert "Floats\n")))
+        (sb--with-property 'stumpbuffer-group number
+          (mapc #'sb--insert-window windows))))))
 
 (defun stumpbuffer-update ()
   (interactive)

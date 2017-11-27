@@ -83,7 +83,8 @@
   (with-simple-error-handling
     (let ((window (find-window-by-id window-id)))
       (move-window-to-group window (current-group))
-      (pull-window window))))
+      (unless (typep window 'float-window)
+        (pull-window window)))))
 
 (defcommand stumpbuffer-throw-window-to-group (from-window-id to-group-num)
     ((:number "From window ID: ")
@@ -105,10 +106,10 @@
            (to-frame (find-frame-by-group-and-number to-group to-frame-num)))
       (save-frame-excursion
         (move-window-to-group from-window to-group)
-        (pull-window from-window to-frame)))))
+        (unless (typep from-window 'float-window)
+          (pull-window from-window to-frame))))))
 
-(defcommand stumpbuffer-throw-window (from-window-id
-                                      to-window-id)
+(defcommand stumpbuffer-throw-window (from-window-id to-window-id)
     ((:number "From window ID: ")
      (:number "To window ID: "))
   (with-simple-error-handling
@@ -117,7 +118,9 @@
            (to-group (window-group to-window)))
       (save-frame-excursion
         (move-window-to-group from-window to-group)
-        (pull-window from-window (window-frame to-window))))))
+        (unless (or (typep from-window 'float-window)
+                    (typep to-window 'float-window))
+          (pull-window from-window (window-frame to-window)))))))
 
 (defcommand stumpbuffer-rename-group (group-num name)
     ((:number "Group number: ")
@@ -251,8 +254,9 @@ respectively."
                       alist))
            (window-plist (window)
              (list* :number (window-number window)
-                    :frame (frame-number
-                            (window-frame window))
+                    :frame (unless (typep window 'float-window)
+                             (frame-number
+                              (window-frame window)))
                     :title (window-name window)
                     :class (window-class window)
                     :role (window-role window)
@@ -261,6 +265,9 @@ respectively."
                     :hiddenp (window-hidden-p window)
                     :visiblep (window-visible-p window)
                     :fullscreenp (window-fullscreen window)
+                    :type (if (typep window 'tile-window)
+                              :tile
+                              :float)
                     (process-custom-fields *window-data-fields* window)))
            (frame-plist (group frame)
              (list* :number (frame-number frame)
@@ -282,6 +289,12 @@ respectively."
                                                   (frame-plist group frame))
                                                 (group-frames group))
                                         #'< :key #'number))
+                      :windows (sort (mapcar #'window-plist
+                                             (remove-if-not
+                                              (lambda (window)
+                                                (typep window 'float-window))
+                                              (group-windows group)))
+                                     #'< :key #'number)
                       :hiddenp (char= (char (group-name group) 0)
                                       #\.)
                       (process-custom-fields *group-data-fields* group)))))

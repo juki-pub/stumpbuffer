@@ -39,6 +39,8 @@
                 #:window-hidden-p
                 #:window-id
                 #:window-name
+                #:float-window
+                #:tile-window
                 )
   
   (:export #:*window-data-fields*
@@ -65,5 +67,8 @@
            #:stumpbuffer-renumber-window
            #:stumpbuffer-delete-frame
            #:stumpbuffer-echo-args
-           #:stumpbuffer-delete-group))
+           #:stumpbuffer-delete-group
+           #:stumpbuffer-dump-group
+           #:stumpbuffer-hide-window
+           ))
 
