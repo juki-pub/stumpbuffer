@@ -22,24 +22,6 @@
   open the buffer in another frame, which will be killed when exiting
   the stumpbuffer.
 
-  The customization option ~stumpbuffer-quit-window-after-command~
-  determines whether the buffer should be killed when executing
-  certain commands (such as focusing a
-  window). ~stumpbuffer-show-frames-p~ can be set to ~nil~ to hide
-  frames from the list.
-
-  The variable ~stumpbuffer-window-format~ determines which fields to
-  show for windows. It should be a list of three element lists in form
-
-  #+BEGIN_EXAMPLE
-  ((field-key width title)
-   ...)
-  #+END_EXAMPLE
-
-  The field key is the one returned by Stumpwm. Width should be the
-  number of characters to show. The last field can have width of
-  ~nil~. Title is the title to show in the header.
-
   | Key       | Command                                                                                 |
   |-----------+-----------------------------------------------------------------------------------------|
   | ~n~       | Move to next line                                                                       |
@@ -75,6 +57,27 @@
   | ~f~       | Toggle frame name display                                                               |
   | ~r~       | Renumber group or window                                                                |
 
+  The customization option ~stumpbuffer-quit-window-after-command~
+  determines whether the buffer should be killed when executing
+  certain commands (such as focusing a
+  window). ~stumpbuffer-show-frames-p~ can be set to ~nil~ to hide
+  frames from the list.
+
+  The variable ~stumpbuffer-window-format~ determines which fields to
+  show for windows. It should be a list of three element lists in form
+
+  #+BEGIN_EXAMPLE
+  ((field-key &optional width title format-fn)
+   ...)
+  #+END_EXAMPLE
+
+  The ~field-key~ is the key returned by Stumpwm. ~width~ is the
+  number of characters to show. The last field can have width of
+  ~nil~. ~title~ is the title to show in the header. ~format-fn~ can
+  be a custom function to format the fields value. The function takes
+  a single argument -- the value -- and returns a string that should
+  be shown in its place.
+  
 * Extending
 
 ** Stumpwm

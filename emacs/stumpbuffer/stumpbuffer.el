@@ -868,13 +868,15 @@ With a prefix argument this also focuses the window."
               'face                      (sb--get-window-face window-plist))
       (insert "    ")
       (dolist (field stumpbuffer-window-format)
-        (destructuring-bind (field &optional width title)
+        (destructuring-bind (field &optional width title format-fn)
             field
           (let* ((entry (format "%s"
                                 (if-let ((value (getf window-plist field)))
-                                    (if (eql value t)
-                                        (string stumpbuffer-window-field-t-character)
-                                      value)
+                                    (if (null format-fn)
+                                        (if (eql value t)
+                                            (string stumpbuffer-window-field-t-character)
+                                          value)
+                                      (funcall format-fn value))
                                   "")))
                  (len (length entry)))
             (insert (if width
