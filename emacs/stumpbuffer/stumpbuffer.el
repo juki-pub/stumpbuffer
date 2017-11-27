@@ -78,7 +78,7 @@ Only set to T if your Stumpwm supports that."
   :type 'boolean
   :group 'stumpbuffer)
 
-(defvar stumpbuffer-kill-frame-on-exit-p nil)
+(defvar sb--kill-frame-on-exit-p nil)
 
 (defvar stumpbuffer-window-format '((:number 3 "N")
                                     (:title 35 "Title")
@@ -997,7 +997,7 @@ Kills the frame if necessary."
   (interactive)
   (when-let ((buf (get-buffer "*StumpBuffer*")))
     (kill-buffer buf))
-  (when stumpbuffer-kill-frame-on-exit-p
+  (when sb--kill-frame-on-exit-p
     (delete-frame)))
 
 (defun stumpbuffer (other-frame-p kill-frame-p)
@@ -1013,7 +1013,7 @@ can be used to open a buffer from outside emacs."
     (if other-frame-p
         (switch-to-buffer-other-frame buffer)
       (switch-to-buffer buffer)))
-  (setq stumpbuffer-kill-frame-on-exit-p kill-frame-p)
+  (setq sb--kill-frame-on-exit-p kill-frame-p)
   (stumpbuffer-mode)
   (stumpbuffer-update)
   (setq buffer-read-only t))
@@ -1027,7 +1027,7 @@ can be used to open a buffer from outside emacs."
   (setq buffer-read-only t)
   (buffer-disable-undo)
   (hl-line-mode)
-  (set (make-local-variable 'stumpbuffer-kill-frame-on-exit-p) nil)
+  (set (make-local-variable 'sb--kill-frame-on-exit-p) nil)
   (make-local-variable 'stumpbuffer-group-filters)
   (make-local-variable 'stumpbuffer-window-filters)
   (make-local-variable 'stumpbuffer-show-frames-p)
