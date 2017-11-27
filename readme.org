@@ -56,6 +56,7 @@
   | ~C~       | Create new group (takes marked windows with it)                                         |
   | ~f~       | Toggle frame name display                                                               |
   | ~r~       | Renumber group or window                                                                |
+  | ~`~       | Cycle filter groups                                                                     |
 
   The customization option ~stumpbuffer-quit-window-after-command~
   determines whether the buffer should be killed when executing
@@ -95,6 +96,41 @@
                 retrieved from Stumpwm.
   - A list ~(:call fn)~ :: Call ~fn~ with the plist. If it returns
        ~nil~, insert nothing. Otherwise insert the result.
+
+** Filters
+
+   The variable ~stumpbuffer-filter-groups~ contains a list of filter
+   groups. Each group should be a list of filters in form ~(what
+   . how)~. ~what~ should be either ~:hide-groups~, ~:show-groups~,
+   ~:hide-windows~ or ~:show-windows~. The ~:hide-~ variants hide
+   matching windows or groups, while the ~:show-~ variants hide
+   non-matching ones.
+
+   ~how~ is the actual filter. It can currently only be a list in form
+   ~(:satisfying fn)~. The ~fn~ is a function to be called with the
+   group or window plist (as retrieved from Stumpwm). If it returns
+   true, the filter applies.
+
+   For example (the default value),
+
+   #+BEGIN_EXAMPLE
+     '(()
+       ((:hide-groups :satisfying stumpbuffer-group-hidden-p))
+       ((:show-groups :satisfying stumpbuffer-group-hidden-p)))
+   #+END_EXAMPLE
+
+   This defines three filter groups. The first one (the default group)
+   will show everything. The second one hides all hidden groups. The
+   third one only shows hidden groups. ~stumpbuffer-group-hidden-p~ is
+   a very simple function:
+
+   #+BEGIN_EXAMPLE
+     (defun stumpbuffer-group-hidden-p (group)
+       (getf group :hiddenp))
+   #+END_EXAMPLE
+
+   Stumpwm provides ~:hiddenp~ in group plists to tell whether it is a
+   hidden group.
   
 * Extending
 
@@ -166,15 +202,6 @@
     All of these have a corresponding macro
     ~stumpbuffer-do-<something>~.
    
-*** Filters
-
-    Filters are implemented with a very simple mechanism. The
-    variables ~stumpbuffer-group-filters~ and
-    ~stumpbuffer-window-filters~ contain a list of functions. The
-    function should take a single argument, a group or window plist as
-    retrieved from Stumpwm, and return ~t~ if it should be filtered
-    out.
-
 *** Faces
 
     The variable ~stumpbuffer-window-faces~ is a list of ~(fn . face)~

@@ -90,11 +90,6 @@ Only set to T if your Stumpwm supports that."
     (stumpbuffer-window-hidden-p . shadow))
   "A list of (fn . face) pairs used to decide window face.")
 
-(defvar stumpbuffer-group-filters nil
-  "A list of functions to filter groups.")
-(defvar stumpbuffer-window-filters nil
-  "A list of functions to filter windows.")
-
 (defvar stumpbuffer-frame-name-format
   '((font-lock-function-name-face "Frame " :number)
     (shadow " (" :width " x " :height ")")))
@@ -105,6 +100,14 @@ Only set to T if your Stumpwm supports that."
     (warning (:call (lambda (plist)
                       (when (eql (getf plist :type) :float)
                         " Float groups don't work yet!"))))))
+
+(defvar stumpbuffer-active-filter-group nil)
+(defvar stumpbuffer-active-filter-group-n 0)
+
+(defvar stumpbuffer-filter-groups
+  '(()
+    ((:hide-groups :satisfying stumpbuffer-group-hidden-p))
+    ((:show-groups :satisfying stumpbuffer-group-hidden-p))))
 
 (defvar stumpbuffer-mode-map
   (let ((map (make-keymap)))
@@ -128,6 +131,7 @@ Only set to T if your Stumpwm supports that."
     (define-key map (kbd "P") 'stumpbuffer-pull-windows)
     (define-key map (kbd "*") 'stumpbuffer-change-marks)
     (define-key map (kbd "f") 'stumpbuffer-toggle-frame-showing)
+    (define-key map (kbd "`") 'stumpbuffer-cycle-filter-groups)
     map))
 
 (defvar stumpbuffer-mode-group-map
@@ -806,6 +810,18 @@ With a prefix argument this also focuses the window."
   (setq stumpbuffer-show-frames-p (not stumpbuffer-show-frames-p))
   (stumpbuffer-update))
 
+(defun stumpbuffer-cycle-filter-groups (n)
+  (interactive "P")
+  (let* ((n (or n 1)))
+    (setq stumpbuffer-active-filter-group-n
+          (mod (+ stumpbuffer-active-filter-group-n n)
+               (length stumpbuffer-filter-groups))
+          
+          stumpbuffer-active-filter-group
+          (nth stumpbuffer-active-filter-group-n
+               stumpbuffer-filter-groups)))
+  (stumpbuffer-update))
+
 
 ;;; Retrieving data and updating
 
@@ -829,9 +845,17 @@ With a prefix argument this also focuses the window."
                                                 (min (length ,header)
                                                      (window-hscroll)))))))
 
-(defun sb--filter-window-p (window)
-  (some (lambda (filter) (funcall filter window))
-        stumpbuffer-window-filters))
+(defun sb--match-filter (how plist)
+  (pcase how
+    (`(:satisfying ,fn) (funcall fn plist))))
+
+(defun sb--filter-window-p (group)
+  (some (lambda (filter)
+          (destructuring-bind (what &rest how) filter
+            (case what
+              (:hide-windows (sb--match-filter how group))
+              (:show-windows (not (sb--match-filter how group))))))
+        stumpbuffer-active-filter-group))
 
 (defmacro sb--with-properties (properties &rest body)
   "Add properties to text inserted by the body."
@@ -916,8 +940,12 @@ With a prefix argument this also focuses the window."
        'stumpbuffer-frame number))))
 
 (defun sb--filter-group-p (group)
-  (some (lambda (filter) (funcall filter group))
-        stumpbuffer-group-filters))
+  (some (lambda (filter)
+          (destructuring-bind (what &rest how) filter
+            (case what
+              (:hide-groups (sb--match-filter how group))
+              (:show-groups (not (sb--match-filter how group))))))
+        stumpbuffer-active-filter-group))
 
 (defun sb--insert-group (group-plist)
   (unless (sb--filter-group-p group-plist)
@@ -1000,7 +1028,11 @@ can be used to open a buffer from outside emacs."
   (set (make-local-variable 'stumpbuffer-kill-frame-on-exit-p) nil)
   (make-local-variable 'stumpbuffer-group-filters)
   (make-local-variable 'stumpbuffer-window-filters)
-  (make-local-variable 'stumpbuffer-show-frames-p))
+  (make-local-variable 'stumpbuffer-show-frames-p)
+  (make-local-variable 'stumpbuffer-active-filter-group-n)
+  (set (make-local-variable 'stumpbuffer-active-filter-group)
+       (nth stumpbuffer-active-filter-group-n
+            stumpbuffer-filter-groups)))
 
 
 ;;; Filter/face utilities
