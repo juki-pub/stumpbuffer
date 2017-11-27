@@ -28,6 +28,7 @@
 
 (require 'cl-lib)
 (require 'subr-x)
+(require 'pcase)
 
 (defgroup stumpbuffer nil
   "A tool to control Stumpwm."
