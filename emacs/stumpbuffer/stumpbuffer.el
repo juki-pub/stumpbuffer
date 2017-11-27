@@ -1027,6 +1027,7 @@ can be used to open a buffer from outside emacs."
   (setq buffer-read-only t)
   (buffer-disable-undo)
   (hl-line-mode)
+  (setq truncate-lines t)
   (set (make-local-variable 'sb--kill-frame-on-exit-p) nil)
   (make-local-variable 'stumpbuffer-group-filters)
   (make-local-variable 'stumpbuffer-window-filters)
