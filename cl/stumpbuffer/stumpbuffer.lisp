@@ -146,7 +146,7 @@
   (with-simple-error-handling
     (message "~d" (group-number (add-group (current-screen) name :background t)))))
 
-(defcommand stumpbuffer-kill-group (group-num)
+(defcommand stumpbuffer-delete-group (group-num)
     ((:number "Group number: "))
   (with-simple-error-handling
     (let* ((groups (screen-groups (current-screen)))
@@ -168,13 +168,13 @@
   (with-simple-error-handling
     (setf (window-user-title (find-window-by-id id)) new-name)))
 
-(defcommand stumpbuffer-kill-window (window-id)
+(defcommand stumpbuffer-delete-window (window-id)
     ((:number "Window ID: "))
   (with-simple-error-handling
     (let* ((window (find-window-by-id window-id)))
       (delete-window window))))
 
-(defcommand stumpbuffer-kill-frame (group-num frame-num)
+(defcommand stumpbuffer-delete-frame (group-num frame-num)
     ((:number "Group number: ")
      (:number "Frame number: "))
   (with-simple-error-handling
