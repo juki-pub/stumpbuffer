@@ -27,6 +27,7 @@
 ;;; Code:
 
 (require 'cl-lib)
+(require 'cl-extra)
 (require 'subr-x)
 (require 'pcase)
 
@@ -99,7 +100,7 @@ Only set to T if your Stumpwm supports that."
   '((font-lock-keyword-face
      "[ " :number " " :name " ]")
     (warning (:call (lambda (plist)
-                      (when (eql (getf plist :type) :float)
+                      (when (eql (cl-getf plist :type) :float)
                         " Float groups don't work yet!"))))))
 
 (defvar sb--active-filter-group nil)
@@ -228,7 +229,7 @@ signalled with the message."
           :group-plist (get-text-property (point) 'stumpbuffer-group-plist))))
 
 (defun sb--current-group-plist ()
-  (getf (stumpbuffer-on-group-name) :group-plist))
+  (cl-getf (stumpbuffer-on-group-name) :group-plist))
 
 (defun stumpbuffer-on-frame-name ()
   "If point is on a frame name, return info about it."
@@ -240,7 +241,7 @@ signalled with the message."
           :frame-plist (get-text-property (point) 'stumpbuffer-frame-plist))))
 
 (defun sb--current-frame-plist ()
-  (getf (stumpbuffer-on-frame-name) :frame-plist))
+  (cl-getf (stumpbuffer-on-frame-name) :frame-plist))
 
 (defun stumpbuffer-on-window ()
   "If point is on a window row, return info about it."
@@ -256,7 +257,7 @@ signalled with the message."
              (list :mark mark)))))
 
 (defun sb--current-window-plist ()
-  (getf (stumpbuffer-on-window) :window-plist))
+  (cl-getf (stumpbuffer-on-window) :window-plist))
 
 (defun sb--get-window-face (window)
   "Get the appropriate face for window."
@@ -407,7 +408,7 @@ is short for
     (goto-char (point-min))
     (while (not (eobp))
       (when-let ((win (stumpbuffer-on-window)))
-        (when (getf win :mark)
+        (when (cl-getf win :mark)
           (save-excursion
             (funcall fn win))))
       (forward-line))))
@@ -423,19 +424,19 @@ is short for
   (unwind-protect
       (save-excursion
         (setq buffer-read-only nil)
-        (goto-char (getf window :start))
+        (goto-char (cl-getf window :start))
         (move-to-column 2)
         (delete-char 1)
         (insert-and-inherit (cond ((null mark) ?\s)
                                   ((eql mark t) ?*)
                                   (t mark)))
         (add-text-properties
-         (getf window :start)
-         (getf window :end)
+         (cl-getf window :start)
+         (cl-getf window :end)
          (list 'stumpbuffer-mark mark
                'face (if mark
                          stumpbuffer-marked-face
-                       (sb--get-window-face (getf window :window-plist))))))
+                       (sb--get-window-face (cl-getf window :window-plist))))))
     (setq buffer-read-only t)))
 
 (defun sb--maybe-prompt-for-mark (default)
@@ -455,9 +456,9 @@ is short for
 (defun stumpbuffer-mark-frame (mark)
   "If point is on a frame, mark all windows in it."
   (interactive (list (sb--maybe-prompt-for-mark ?*)))
-  (when-let ((frame-num (getf (sb--current-frame-plist) :number)))
+  (when-let ((frame-num (cl-getf (sb--current-frame-plist) :number)))
     (stumpbuffer-do-group-windows (win)
-      (when (= frame-num (getf (getf win :window-plist) :frame))
+      (when (= frame-num (cl-getf (cl-getf win :window-plist) :frame))
         (stumpbuffer-change-window-mark win mark)))
     (stumpbuffer-forward-frame)))
 
@@ -501,72 +502,72 @@ is short for
   (interactive (list (read-string "Regex: ")
                      (sb--maybe-prompt-for-mark ?*)))
   (stumpbuffer-do-windows (win)
-    (when-let ((title (getf (getf win :window-plist) :title)))
+    (when-let ((title (cl-getf (cl-getf win :window-plist) :title)))
       (when (string-match regex title)
         (stumpbuffer-mark mark)))))
 
 (defun stumpbuffer-mark-by-frame (frame mark)
-  (interactive (list (getf (sb--current-window-plist) :frame)
+  (interactive (list (cl-getf (sb--current-window-plist) :frame)
                      (sb--maybe-prompt-for-mark ?*)))
   (stumpbuffer-do-group-windows (win)
-    (when-let ((f (getf (getf win :window-plist) :frame)))
+    (when-let ((f (cl-getf (cl-getf win :window-plist) :frame)))
       (when (= f frame)
         (stumpbuffer-mark mark)))))
 
 (defun stumpbuffer-mark-frame-for-delete (frame)
-  (interactive (list (getf (sb--current-frame-plist) :number)))
+  (interactive (list (cl-getf (sb--current-frame-plist) :number)))
   (stumpbuffer-mark-by-frame frame ?D)
   (stumpbuffer-forward-frame))
 
 (defun stumpbuffer-mark-frame-for-kill (frame)
-  (interactive (list (getf (sb--current-frame-plist) :number)))
+  (interactive (list (cl-getf (sb--current-frame-plist) :number)))
   (stumpbuffer-mark-by-frame frame ?K)
   (stumpbuffer-forward-frame))
 
 (defun stumpbuffer-mark-group-for-delete (group)
-  (interactive (list (getf (sb--current-group-plist) :number)))
+  (interactive (list (cl-getf (sb--current-group-plist) :number)))
   (stumpbuffer-mark-group group ?D))
 
 (defun stumpbuffer-mark-group-for-kill (group)
-  (interactive (list (getf (sb--current-group-plist) :number)))
+  (interactive (list (cl-getf (sb--current-group-plist) :number)))
   (stumpbuffer-mark-group group ?K))
 
 (defun sb--get-all-window-values (field)
   (let (result)
     (stumpbuffer-do-windows (win)
-      (when-let ((val (getf (getf win :window-plist)
-                            field)))
+      (when-let ((val (cl-getf (cl-getf win :window-plist)
+                               field)))
         (push val result)))
     result))
 
 (defun stumpbuffer-mark-by-window-class (class mark)
   (interactive (list (or (unless current-prefix-arg
-                           (getf (sb--current-window-plist) :class))
+                           (cl-getf (sb--current-window-plist) :class))
                          (completing-read "Class: "
                                           (sb--get-all-window-values :class)))
                      (sb--maybe-prompt-for-mark ?*)))
   (stumpbuffer-do-windows (win)
-    (when (equal class (getf (getf win :window-plist) :class))
+    (when (equal class (cl-getf (cl-getf win :window-plist) :class))
       (stumpbuffer-mark mark))))
 
 (defun stumpbuffer-mark-by-window-role (role mark)
   (interactive (list (or (unless current-prefix-arg
-                           (getf (sb--current-window-plist) :role))
+                           (cl-getf (sb--current-window-plist) :role))
                          (completing-read "Role: "
                                           (sb--get-all-window-values :role)))
                      (sb--maybe-prompt-for-mark ?*)))
   (stumpbuffer-do-windows (win)
-    (when (equal role (getf (getf win :window-plist) :role))
+    (when (equal role (cl-getf (cl-getf win :window-plist) :role))
       (stumpbuffer-mark mark))))
 
 (defun stumpbuffer-mark-by-window-instance (instance mark)
   (interactive (list (or (unless current-prefix-arg
-                           (getf (sb--current-window-plist) :instance))
+                           (cl-getf (sb--current-window-plist) :instance))
                          (completing-read "Instance: "
                                           (sb--get-all-window-values :instance)))
                      (sb--maybe-prompt-for-mark ?*)))
   (stumpbuffer-do-windows (win)
-    (when (equal instance (getf (getf win :window-plist) :instance))
+    (when (equal instance (cl-getf (cl-getf win :window-plist) :instance))
       (stumpbuffer-mark mark))))
 
 (defun stumpbuffer-mark-current-group (mark)
@@ -577,32 +578,32 @@ is short for
 (defun stumpbuffer-change-marks (mark)
   (interactive (list (read-char "Mark: ")))
   (stumpbuffer-do-marked-windows (win)
-    (when (char-equal ?* (getf win :mark))
+    (when (char-equal ?* (cl-getf win :mark))
       (stumpbuffer-mark mark))))
 
 (defun stumpbuffer-execute-marks ()
   (interactive)
   (when (yes-or-no-p "Execute marks? ")
     (stumpbuffer-do-marked-windows (win)
-      (when-let ((mark (getf win :mark))
+      (when-let ((mark (cl-getf win :mark))
                  (fn (cdr (assoc mark stumpbuffer-mark-functions))))
         (funcall fn win)
         (stumpbuffer-unmark)))
     (stumpbuffer-update)))
 
 (defun stumpbuffer-delete (win)
-  (when-let ((win (getf (getf win :window-plist) :id)))
+  (when-let ((win (cl-getf (cl-getf win :window-plist) :id)))
     (stumpbuffer-command "delete-window" win)))
 
 (defun stumpbuffer-kill (win)
-  (when-let ((win (getf (getf win :window-plist) :id)))
+  (when-let ((win (cl-getf (cl-getf win :window-plist) :id)))
     (stumpbuffer-command "kill-window" win)))
 
 (defun stumpbuffer-delete-and-update (win)
   (interactive (list (stumpbuffer-on-window)))
   (when (yes-or-no-p (format "Delete window '%s'? "
-                             (getf (getf win :window-plist)
-                                   :title)))
+                             (cl-getf (cl-getf win :window-plist)
+                                      :title)))
     (stumpbuffer-delete win)
     (stumpbuffer-update)
     (message "Deleted windows may take a moment to die. Use `g` to update.")))
@@ -610,8 +611,8 @@ is short for
 (defun stumpbuffer-kill-and-update (win)
   (interactive (list (stumpbuffer-on-window)))
   (when (yes-or-no-p (format "Kill window '%s'? "
-                             (getf (getf win :window-plist)
-                                   :title)))
+                             (cl-getf (cl-getf win :window-plist)
+                                      :title)))
     (stumpbuffer-kill win)
     (stumpbuffer-update)))
 
@@ -623,7 +624,7 @@ is short for
     (stumpbuffer-update)))
 
 (defun stumpbuffer-delete-group (group)
-  (interactive (list (getf (sb--current-group-plist) :number)))
+  (interactive (list (cl-getf (sb--current-group-plist) :number)))
   (when (and group
              (yes-or-no-p "Delete group? "))
     (stumpbuffer-command "delete-group" group)
@@ -631,24 +632,24 @@ is short for
 
 (defun stumpbuffer-delete-frame (group frame)
   (interactive (let ((on-frame (stumpbuffer-on-frame-name)))
-                 (list (getf on-frame :group)
-                       (getf (getf on-frame :frame-plist) :number))))
+                 (list (cl-getf on-frame :group)
+                       (cl-getf (cl-getf on-frame :frame-plist) :number))))
   (when (and group frame)
     (stumpbuffer-command "delete-frame" group frame)
     (stumpbuffer-update)))
 
 (defun stumpbuffer-split-frame-vertical (group frame)
   (interactive (let ((on-frame (stumpbuffer-on-frame-name)))
-                 (list (getf on-frame :group)
-                       (getf (getf on-frame :frame-plist) :number))))
+                 (list (cl-getf on-frame :group)
+                       (cl-getf (cl-getf on-frame :frame-plist) :number))))
   (when (and group frame)
     (stumpbuffer-command "split-frame" group frame "2")
     (stumpbuffer-update)))
 
 (defun stumpbuffer-split-frame-horizontal (group frame)
   (interactive (let ((on-frame (stumpbuffer-on-frame-name)))
-                 (list (getf on-frame :group)
-                       (getf (getf on-frame :frame-plist) :number))))
+                 (list (cl-getf on-frame :group)
+                       (cl-getf (cl-getf on-frame :frame-plist) :number))))
   (when (and group frame)
     (stumpbuffer-command "split-frame" group frame "1")
     (stumpbuffer-update)))
@@ -656,57 +657,57 @@ is short for
 (defun stumpbuffer-split-window-frame-vertical (window)
   (interactive (list (stumpbuffer-on-window)))
   (when window
-    (when-let ((group (getf window :group))
-               (frame (getf window :frame)))
+    (when-let ((group (cl-getf window :group))
+               (frame (cl-getf window :frame)))
       (stumpbuffer-split-frame-vertical group frame))))
 
 (defun stumpbuffer-split-window-frame-horizontal (window)
   (interactive (list (stumpbuffer-on-window)))
   (when window
-    (when-let ((group (getf window :group))
-               (frame (getf window :frame)))
+    (when-let ((group (cl-getf window :group))
+               (frame (cl-getf window :frame)))
       (stumpbuffer-split-frame-horizontal group frame))))
 
 (defun stumpbuffer-rename-group (group new-name)
   (interactive (let ((gplist (sb--current-group-plist)))
-                 (list (getf gplist :number)
+                 (list (cl-getf gplist :number)
                        (read-string (format "Rename '%s': "
-                                            (getf gplist :name))))))
+                                            (cl-getf gplist :name))))))
   (when group
     (stumpbuffer-command "rename-group" group new-name))
   (stumpbuffer-update))
 
 (defun stumpbuffer-rename-window (window-id new-name)
   (interactive (let ((wplist (sb--current-window-plist)))
-                 (list (getf wplist :id)
+                 (list (cl-getf wplist :id)
                        (read-string (format "Rename '%s': "
-                                            (getf wplist :title))))))
+                                            (cl-getf wplist :title))))))
   (when window-id
     (stumpbuffer-command "rename-window" window-id new-name))
   (stumpbuffer-update))
 
 (defun stumpbuffer-renumber-window (window-id new-number)
   (interactive (let ((wplist (sb--current-window-plist)))
-                 (list (getf wplist :id)
+                 (list (cl-getf wplist :id)
                        (read-string (format "Renumber '%s' from %d to: "
-                                            (getf wplist :title)
-                                            (getf wplist :number))))))
+                                            (cl-getf wplist :title)
+                                            (cl-getf wplist :number))))))
   (when (and window-id new-number)
     (stumpbuffer-command "renumber-window" window-id new-number))
   (stumpbuffer-update))
 
 (defun stumpbuffer-renumber-group (group new-number)
   (interactive (let ((gplist (sb--current-group-plist)))
-                 (list (getf gplist :number)
+                 (list (cl-getf gplist :number)
                        (read-string (format "Renumber '%s' from %d to: "
-                                            (getf gplist :name)
-                                            (getf gplist :number))))))
+                                            (cl-getf gplist :name)
+                                            (cl-getf gplist :number))))))
   (when (and group new-number)
     (stumpbuffer-command "renumber-group" group new-number))
   (stumpbuffer-update))
 
 (defun stumpbuffer-switch-to-group (group)
-  (interactive (list (getf (sb--current-group-plist) :number)))
+  (interactive (list (cl-getf (sb--current-group-plist) :number)))
   (when group
     (stumpbuffer-command "switch-to-group" group)
     (when stumpbuffer-quit-window-after-command
@@ -714,8 +715,8 @@ is short for
 
 (defun stumpbuffer-focus-frame (group frame)
   (interactive (let ((frame (stumpbuffer-on-frame-name)))
-                 (list (getf frame :group)
-                       (getf (getf frame :frame-plist) :number))))
+                 (list (cl-getf frame :group)
+                       (cl-getf (cl-getf frame :frame-plist) :number))))
   (when (and group frame)
     (stumpbuffer-command "focus-frame" group frame)
     (when stumpbuffer-quit-window-after-command
@@ -723,8 +724,8 @@ is short for
 
 (defun stumpbuffer-focus-window (group window)
   (interactive (let ((win (stumpbuffer-on-window)))
-                 (list (getf win :group)
-                       (getf (getf win :window-plist) :id))))
+                 (list (cl-getf win :group)
+                       (cl-getf (cl-getf win :window-plist) :id))))
   (when (and group window)
     (stumpbuffer-command "focus-window" group window)
     (when stumpbuffer-quit-window-after-command
@@ -740,12 +741,12 @@ marked windows, the window at point will be pulled."
   (cl-flet ((pull-window (win)
                          (stumpbuffer-command
                           "pull-window"
-                          (getf (getf win :window-plist) :id))))
+                          (cl-getf (cl-getf win :window-plist) :id))))
     (if window
         (pull-window window)
       (let (marksp)
         (stumpbuffer-do-marked-windows (win)
-          (when (char-equal ?* (getf win :mark))
+          (when (char-equal ?* (cl-getf win :mark))
             (setq marksp t)
             (pull-window win)))
         (unless marksp
@@ -758,12 +759,12 @@ marked windows, the window at point will be pulled."
   "Move all `*` marked windows to a group.
 
 With a prefix argument this also switches to the group."
-  (interactive (list (getf (sb--current-group-plist) :number)
+  (interactive (list (cl-getf (sb--current-group-plist) :number)
                      current-prefix-arg))
   (stumpbuffer-do-marked-windows (win)
-    (when (char-equal ?* (getf win :mark))
+    (when (char-equal ?* (cl-getf win :mark))
       (stumpbuffer-command "throw-window-to-group"
-                           (getf (getf win :window-plist) :id)
+                           (cl-getf (cl-getf win :window-plist) :id)
                            group-number)))
   (stumpbuffer-update)
   (when followp
@@ -774,15 +775,15 @@ With a prefix argument this also switches to the group."
 
 With a prefix argument this also focuses the frame."
   (interactive (let ((frame (stumpbuffer-on-frame-name)))
-                 (list (getf frame :group)
-                       (getf (getf frame :frame-plist) :number)
+                 (list (cl-getf frame :group)
+                       (cl-getf (cl-getf frame :frame-plist) :number)
                        current-prefix-arg)))
   (when-let ((target-group group)
              (target-frame frame))
     (stumpbuffer-do-marked-windows (win)
-      (when (char-equal ?* (getf win :mark))
+      (when (char-equal ?* (cl-getf win :mark))
         (stumpbuffer-command "throw-window-to-frame"
-                             (getf (getf win :window-plist) :id)
+                             (cl-getf (cl-getf win :window-plist) :id)
                              target-group
                              target-frame))))
   (stumpbuffer-update)
@@ -793,17 +794,17 @@ With a prefix argument this also focuses the frame."
   "Move all `*` marked windows to a window.
 
 With a prefix argument this also focuses the window."
-  (interactive (list (getf (sb--current-window-plist) :id)
+  (interactive (list (cl-getf (sb--current-window-plist) :id)
                      current-prefix-arg))
   (stumpbuffer-do-marked-windows (win)
-    (when (char-equal ?* (getf win :mark))
+    (when (char-equal ?* (cl-getf win :mark))
       (stumpbuffer-command "throw-window"
-                           (getf (getf win :window-plist) :id)
+                           (cl-getf (cl-getf win :window-plist) :id)
                            target-window-id)))
   (stumpbuffer-update)
   (when followp
     (let ((twindow (stumpbuffer-on-window)))
-      (stumpbuffer-focus-window (getf twindow :group)
+      (stumpbuffer-focus-window (cl-getf twindow :group)
                                 target-window-id))))
 
 (defun stumpbuffer-toggle-frame-showing ()
@@ -851,12 +852,12 @@ With a prefix argument this also focuses the window."
     (`(:satisfying ,fn) (funcall fn plist))))
 
 (defun sb--filter-window-p (group)
-  (some (lambda (filter)
-          (destructuring-bind (what &rest how) filter
-            (case what
-              (:hide-windows (sb--match-filter how group))
-              (:show-windows (not (sb--match-filter how group))))))
-        sb--active-filter-group))
+  (cl-some (lambda (filter)
+             (destructuring-bind (what &rest how) filter
+               (case what
+                 (:hide-windows (sb--match-filter how group))
+                 (:show-windows (not (sb--match-filter how group))))))
+           sb--active-filter-group))
 
 (defmacro sb--with-properties (properties &rest body)
   "Add properties to text inserted by the body."
@@ -878,8 +879,8 @@ With a prefix argument this also focuses the window."
   (unless (sb--filter-window-p window-plist)
     (sb--with-properties
         (list 'keymap                    stumpbuffer-mode-window-map
-              'stumpbuffer-window        (getf window-plist :number)
-              'stumpbuffer-window-id     (getf window-plist :id)
+              'stumpbuffer-window        (cl-getf window-plist :number)
+              'stumpbuffer-window-id     (cl-getf window-plist :id)
               'stumpbuffer-window-plist  window-plist
               'face                      (sb--get-window-face window-plist))
       (insert "    ")
@@ -887,7 +888,7 @@ With a prefix argument this also focuses the window."
         (destructuring-bind (field &optional width title format-fn)
             field
           (let* ((entry (format "%s"
-                                (if-let ((value (getf window-plist field)))
+                                (if-let ((value (cl-getf window-plist field)))
                                     (if (null format-fn)
                                         (if (eql value t)
                                             (string stumpbuffer-window-field-t-character)
@@ -918,7 +919,7 @@ With a prefix argument this also focuses the window."
                  (insert value))))
             (string (insert thing))
             (keyword
-             (let ((value (getf plist thing "")))
+             (let ((value (cl-getf plist thing "")))
                (typecase value
                  (string (insert value))
                  (number (insert (number-to-string value))))))))))))
@@ -941,12 +942,12 @@ With a prefix argument this also focuses the window."
        'stumpbuffer-frame number))))
 
 (defun sb--filter-group-p (group)
-  (some (lambda (filter)
-          (destructuring-bind (what &rest how) filter
-            (case what
-              (:hide-groups (sb--match-filter how group))
-              (:show-groups (not (sb--match-filter how group))))))
-        sb--active-filter-group))
+  (cl-some (lambda (filter)
+             (destructuring-bind (what &rest how) filter
+               (case what
+                 (:hide-groups (sb--match-filter how group))
+                 (:show-groups (not (sb--match-filter how group))))))
+           sb--active-filter-group))
 
 (defun sb--insert-group (group-plist)
   (unless (sb--filter-group-p group-plist)
@@ -966,8 +967,8 @@ With a prefix argument this also focuses the window."
   (interactive)
   (let (active-marks)
     (stumpbuffer-do-windows (win)
-      (when-let ((mark (getf win :mark)))
-        (push (cons (getf (getf win :window-plist) :id)
+      (when-let ((mark (cl-getf win :mark)))
+        (push (cons (cl-getf (cl-getf win :window-plist) :id)
                     mark)
               active-marks)))
     (let ((position (count-lines (point-min) (point))))
@@ -979,7 +980,7 @@ With a prefix argument this also focuses the window."
         (setq buffer-read-only t)
         (when active-marks
           (stumpbuffer-do-windows (win)
-            (when-let ((id (getf (getf win :window-plist) :id))
+            (when-let ((id (cl-getf (cl-getf win :window-plist) :id))
                        (mark (cdr (assoc id active-marks))))
               (stumpbuffer-mark mark))))
         (goto-char (point-min))
@@ -1040,16 +1041,16 @@ can be used to open a buffer from outside emacs."
 ;;; Filter/face utilities
 
 (defun stumpbuffer-group-hidden-p (group)
-  (getf group :hiddenp))
+  (cl-getf group :hiddenp))
 
 (defun stumpbuffer-window-hidden-p (window)
-  (getf window :hiddenp))
+  (cl-getf window :hiddenp))
 
 (defun stumpbuffer-window-visible-p (window)
-  (getf window :visiblep))
+  (cl-getf window :visiblep))
 
 (defun stumpbuffer-window-fullscreen-p (window)
-  (getf window :fullscreenp))
+  (cl-getf window :fullscreenp))
 
 
 (provide 'stumpbuffer)
