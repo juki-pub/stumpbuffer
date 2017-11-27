@@ -114,6 +114,12 @@ Only set to T if your Stumpwm supports that."
   `((,stumpbuffer-frame-face "Frame " :number)
     (,stumpbuffer-frame-size-face " (" :width " x " :height ")")))
 
+(defvar stumpbuffer-group-name-format
+  `((,stumpbuffer-group-face
+     "[ " :number " " :name " ]"
+     (:eval (when (eql type :float)
+              " Float groups don't work yet!")))))
+
 (defvar stumpbuffer-mode-map
   (let ((map (make-keymap)))
     (define-key map (kbd "n") 'stumpbuffer-forward-line)
@@ -936,14 +942,7 @@ With a prefix argument this also focuses the window."
                 'face                      stumpbuffer-group-face
                 'stumpbuffer-group-number  number
                 'stumpbuffer-group-plist   group-plist)
-        (insert "[ ")
-        (when number
-          (insert (number-to-string number) " "))
-        (when name
-          (insert name))
-        (insert " ]")
-        (when (eql type :float)
-          (insert " Float groups don't work yet!")))
+        (sb--insert-format group-plist stumpbuffer-group-name-format))
       (insert "\n")
       (unless (null frames)
         (sb--with-property 'stumpbuffer-group number
