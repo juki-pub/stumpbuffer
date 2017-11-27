@@ -148,6 +148,7 @@ Only set to T if your Stumpwm supports that."
     (define-key map (kbd "N") 'stumpbuffer-rename-group)
     (define-key map (kbd "D") 'stumpbuffer-delete-group)
     (define-key map (kbd "d") 'stumpbuffer-mark-group-for-delete)
+    (define-key map (kbd "k") 'stumpbuffer-mark-group-for-kill)
     (define-key map (kbd "r") 'stumpbuffer-renumber-group)
     map))
 
@@ -156,6 +157,7 @@ Only set to T if your Stumpwm supports that."
     (define-key map (kbd "m") 'stumpbuffer-mark-frame)
     (define-key map (kbd "u") 'stumpbuffer-unmark-frame)
     (define-key map (kbd "d") 'stumpbuffer-mark-frame-for-delete)
+    (define-key map (kbd "k") 'stumpbuffer-mark-frame-for-kill)
     (define-key map (kbd "D") 'stumpbuffer-delete-frame)
     (define-key map (kbd "T") 'stumpbuffer-throw-marked-windows-to-frame)
     (define-key map (kbd "s") 'stumpbuffer-split-frame-vertical)
@@ -170,6 +172,8 @@ Only set to T if your Stumpwm supports that."
     (define-key map (kbd "RET") 'stumpbuffer-focus-window)
     (define-key map (kbd "d") 'stumpbuffer-mark-to-delete)
     (define-key map (kbd "D") 'stumpbuffer-delete-and-update)
+    (define-key map (kbd "k") 'stumpbuffer-mark-to-kill)
+    (define-key map (kbd "K") 'stumpbuffer-kill-and-update)
     (define-key map (kbd "T") 'stumpbuffer-throw-marked-windows)
     (define-key map (kbd "N") 'stumpbuffer-rename-window)
     (define-key map (kbd "s") 'stumpbuffer-split-window-frame-vertical)
@@ -178,7 +182,8 @@ Only set to T if your Stumpwm supports that."
     map))
 
 (defvar stumpbuffer-mark-functions
-  '((?D . stumpbuffer-delete))
+  '((?D . stumpbuffer-delete)
+    (?K . stumpbuffer-kill))
   "An alist of mark character to functions to execute the mark.")
 
 
@@ -492,6 +497,10 @@ is short for
   (interactive)
   (stumpbuffer-mark ?D))
 
+(defun stumpbuffer-mark-to-kill ()
+  (interactive)
+  (stumpbuffer-mark ?K))
+
 (defun stumpbuffer-mark-by-window-title-regex (regex mark)
   (interactive (list (read-string "Regex: ")
                      (sb--maybe-prompt-for-mark ?*)))
@@ -513,9 +522,18 @@ is short for
   (stumpbuffer-mark-by-frame frame ?D)
   (stumpbuffer-forward-frame))
 
+(defun stumpbuffer-mark-frame-for-kill (frame)
+  (interactive (list (getf (sb--current-frame-plist) :number)))
+  (stumpbuffer-mark-by-frame frame ?K)
+  (stumpbuffer-forward-frame))
+
 (defun stumpbuffer-mark-group-for-delete (group)
   (interactive (list (getf (sb--current-group-plist) :number)))
   (stumpbuffer-mark-group group ?D))
+
+(defun stumpbuffer-mark-group-for-kill (group)
+  (interactive (list (getf (sb--current-group-plist) :number)))
+  (stumpbuffer-mark-group group ?K))
 
 (defun sb--get-all-window-values (field)
   (let (result)
@@ -580,6 +598,10 @@ is short for
   (when-let ((win (getf (getf win :window-plist) :id)))
     (stumpbuffer-command "delete-window" win)))
 
+(defun stumpbuffer-kill (win)
+  (when-let ((win (getf (getf win :window-plist) :id)))
+    (stumpbuffer-command "kill-window" win)))
+
 (defun stumpbuffer-delete-and-update (win)
   (interactive (list (stumpbuffer-on-window)))
   (when (yes-or-no-p (format "Delete window '%s'? "
@@ -588,6 +610,14 @@ is short for
     (stumpbuffer-delete win)
     (stumpbuffer-update)
     (message "Deleted windows may take a moment to die. Use `g` to update.")))
+
+(defun stumpbuffer-kill-and-update (win)
+  (interactive (list (stumpbuffer-on-window)))
+  (when (yes-or-no-p (format "Kill window '%s'? "
+                             (getf (getf win :window-plist)
+                                   :title)))
+    (stumpbuffer-kill win)
+    (stumpbuffer-update)))
 
 (defun stumpbuffer-create-group (name)
   (interactive (list (read-string "New group name: ")))

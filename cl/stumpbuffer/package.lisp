@@ -59,5 +59,11 @@
            #:stumpbuffer-kill-frame
            #:stumpbuffer-throw-window-to-frame
            #:stumpbuffer-split-frame
-           #:stumpbuffer-focus-frame))
+           #:stumpbuffer-focus-frame
+           #:stumpbuffer-delete-window
+           #:stumpbuffer-renumber-group
+           #:stumpbuffer-renumber-window
+           #:stumpbuffer-delete-frame
+           #:stumpbuffer-echo-args
+           #:stumpbuffer-delete-group))
 

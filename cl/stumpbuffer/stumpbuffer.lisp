@@ -174,6 +174,12 @@
     (let* ((window (find-window-by-id window-id)))
       (delete-window window))))
 
+(defcommand stumpbuffer-kill-window (window-id)
+    ((:number "Window ID: "))
+  (with-simple-error-handling
+    (let* ((window (find-window-by-id window-id)))
+      (kill-window window))))
+
 (defcommand stumpbuffer-delete-frame (group-num frame-num)
     ((:number "Group number: ")
      (:number "Frame number: "))
