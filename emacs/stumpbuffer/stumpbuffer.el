@@ -107,9 +107,11 @@ Only set to T if your Stumpwm supports that."
 (defvar sb--active-filter-group-n 0)
 
 (defvar stumpbuffer-filter-groups
-  '(()
-    ((:hide-groups :satisfying stumpbuffer-group-hidden-p))
-    ((:show-groups :satisfying stumpbuffer-group-hidden-p))))
+  '(("Everything")
+    ("No hidden groups"
+     (:hide-groups :satisfying stumpbuffer-group-hidden-p))
+    ("Only hidden groups"
+     (:show-groups :satisfying stumpbuffer-group-hidden-p))))
 
 (defvar stumpbuffer-mode-map
   (let ((map (make-keymap)))
@@ -134,6 +136,7 @@ Only set to T if your Stumpwm supports that."
     (define-key map (kbd "*") 'stumpbuffer-change-marks)
     (define-key map (kbd "f") 'stumpbuffer-toggle-frame-showing)
     (define-key map (kbd "`") 'stumpbuffer-cycle-filter-groups)
+    (define-key map (kbd "^") 'stumpbuffer-select-filter-group)
     map))
 
 (defvar stumpbuffer-mode-group-map
@@ -824,6 +827,21 @@ With a prefix argument this also focuses the window."
                stumpbuffer-filter-groups)))
   (stumpbuffer-update))
 
+(defun stumpbuffer-select-filter-group (group-name)
+  (interactive (list (completing-read "Filter group: "
+                                      stumpbuffer-filter-groups
+                                      nil t)))
+  (when group-name
+    (setq sb--active-filter-group-n
+          (or (cl-position group-name stumpbuffer-filter-groups
+                           :key #'first
+                           :test #'string-equal)
+              (error "No such filter group: %s" group-name))
+          sb--active-filter-group
+          (nth sb--active-filter-group-n
+               stumpbuffer-filter-groups)))
+  (stumpbuffer-update))
+
 
 ;;; Retrieving data and updating
 
@@ -857,7 +875,9 @@ With a prefix argument this also focuses the window."
                (case what
                  (:hide-windows (sb--match-filter how group))
                  (:show-windows (not (sb--match-filter how group))))))
-           sb--active-filter-group))
+           (if (stringp (first sb--active-filter-group))
+               (rest sb--active-filter-group)
+             sb--active-filter-group)))
 
 (defmacro sb--with-properties (properties &rest body)
   "Add properties to text inserted by the body."
@@ -947,7 +967,9 @@ With a prefix argument this also focuses the window."
                (case what
                  (:hide-groups (sb--match-filter how group))
                  (:show-groups (not (sb--match-filter how group))))))
-           sb--active-filter-group))
+           (if (stringp (first sb--active-filter-group))
+               (rest sb--active-filter-group)
+             sb--active-filter-group)))
 
 (defun sb--insert-group (group-plist)
   (unless (sb--filter-group-p group-plist)

@@ -57,6 +57,7 @@
   | ~f~       | Toggle frame name display                                                               |
   | ~r~       | Renumber group or window                                                                |
   | ~`~       | Cycle filter groups                                                                     |
+  | ~^~       | Select filter group by name                                                             |
 
   The customization option ~stumpbuffer-quit-window-after-command~
   determines whether the buffer should be killed when executing
@@ -134,12 +135,12 @@
    
 ** Filters
 
-   The variable ~stumpbuffer-filter-groups~ contains a list of filter
-   groups. Each group should be a list of filters in form ~(what
-   . how)~. ~what~ should be either ~:hide-groups~, ~:show-groups~,
-   ~:hide-windows~ or ~:show-windows~. The ~:hide-~ variants hide
-   matching windows or groups, while the ~:show-~ variants hide
-   non-matching ones.
+   The variable ~stumpbuffer-filter-groups~ contains an alist of
+   filter groups. Each group should be a cons cell of a name (a
+   string) and a list of filters in form ~(what . how)~. ~what~ should
+   be either ~:hide-groups~, ~:show-groups~, ~:hide-windows~ or
+   ~:show-windows~. The ~:hide-~ variants hide matching windows or
+   groups, while the ~:show-~ variants hide non-matching ones.
 
    ~how~ is the actual filter. It can currently only be a list in form
    ~(:satisfying fn)~. The ~fn~ is a function to be called with the
@@ -149,9 +150,11 @@
    For example (the default value),
 
    #+BEGIN_EXAMPLE
-     '(()
-       ((:hide-groups :satisfying stumpbuffer-group-hidden-p))
-       ((:show-groups :satisfying stumpbuffer-group-hidden-p)))
+     '(("Everything")
+       ("No hidden groups"
+        (:hide-groups :satisfying stumpbuffer-group-hidden-p))
+       ("Only hidden groups"
+        (:show-groups :satisfying stumpbuffer-group-hidden-p)))
    #+END_EXAMPLE
 
    This defines three filter groups. The first one (the default group)
