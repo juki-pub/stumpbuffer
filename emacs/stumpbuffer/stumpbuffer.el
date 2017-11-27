@@ -253,10 +253,11 @@ signalled with the message."
 
 (defun sb--get-window-face (window)
   "Get the appropriate face for window."
-  (dolist (pair stumpbuffer-window-faces)
-    (destructuring-bind (fn . face) pair
-      (when (funcall fn window)
-        (return face)))))
+  (let (faces)
+   (dolist (pair stumpbuffer-window-faces faces)
+     (destructuring-bind (fn . face) pair
+       (when (funcall fn window)
+         (push face faces))))))
 
 
 ;;; Navigating
