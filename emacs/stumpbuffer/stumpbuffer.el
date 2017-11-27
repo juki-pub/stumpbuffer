@@ -88,6 +88,13 @@
   :type 'character
   :group 'stumpbuffer)
 
+(defcustom stumpbuffer-stumpish-quote-arguments-with-spaces-p nil
+  "Should arguments with spaces be quoted?
+
+Only set to T if your Stumpwm supports that."
+  :type 'boolean
+  :group 'stumpbuffer)
+
 (defvar stumpbuffer-kill-frame-on-exit-p nil)
 
 (defvar stumpbuffer-window-format '((:number 3 "N")
@@ -172,6 +179,14 @@
 
 ;;; Executing commands
 
+(defun sb--process-arg (arg)
+  (typecase arg
+    (string (if (and stumpbuffer-stumpish-quote-arguments-with-spaces-p
+                     (position ?\s arg))
+                (format "\"%s\"" (replace-regexp-in-string "\"" "\\\\\"" arg))
+              arg))
+    (number (number-to-string arg))))
+
 (defun stumpbuffer-command (command &rest args)
   "Execute a Stumpwm command.
 
@@ -182,14 +197,15 @@ be the return value.
 As a simple error handling mechanism, the command may return a
 two element list `(:error msg)`. An Emacs error will be
 signalled with the message."
-  (let ((output (get-buffer-create "*stumpbuffer-data*")))
+  (with-temp-buffer
     (apply #'call-process stumpbuffer-stumpish-command
-           nil output nil
-           (concat "stumpbuffer-" command) args)
-    (unless (zerop (buffer-size output))
-      (let ((m (set-marker (make-marker) 1 output)))
+           nil t nil
+           (concat "stumpbuffer-" command)
+           (mapcar #'sb--process-arg args))
+    (unless (zerop (buffer-size))
+      (let ((m (set-marker (make-marker) 1)))
         (when-let (result (prog1 (read m)
-                            (kill-buffer "*stumpbuffer-data*")))
+                            (kill-buffer)))
           (if (and (listp result)
                    (eql :error (first result)))
               (error "StumpBuffer error: %s" (second result))
@@ -554,8 +570,7 @@ is short for
 
 (defun stumpbuffer-kill (win)
   (when-let ((win (getf (getf win :window-plist) :id)))
-    (stumpbuffer-command "kill-window"
-                         (number-to-string win))))
+    (stumpbuffer-command "kill-window" win)))
 
 (defun stumpbuffer-kill-and-update (win)
   (interactive (list (stumpbuffer-on-window)))
@@ -577,8 +592,7 @@ is short for
   (interactive (list (getf (sb--current-group-plist) :number)))
   (when (and group
              (yes-or-no-p "Delete group? "))
-    (stumpbuffer-command "kill-group"
-                         (number-to-string group))
+    (stumpbuffer-command "kill-group" group)
     (stumpbuffer-update)))
 
 (defun stumpbuffer-kill-frame (group frame)
@@ -586,9 +600,7 @@ is short for
                  (list (getf on-frame :group)
                        (getf (getf on-frame :frame-plist) :number))))
   (when (and group frame)
-    (stumpbuffer-command "kill-frame"
-                         (number-to-string group)
-                         (number-to-string frame))
+    (stumpbuffer-command "kill-frame" group frame)
     (stumpbuffer-update)))
 
 (defun stumpbuffer-split-frame-vertical (group frame)
@@ -596,9 +608,7 @@ is short for
                  (list (getf on-frame :group)
                        (getf (getf on-frame :frame-plist) :number))))
   (when (and group frame)
-    (stumpbuffer-command "split-frame"
-                         (number-to-string group)
-                         (number-to-string frame)
+    (stumpbuffer-command "split-frame" group frame
                          "2")
     (stumpbuffer-update)))
 
@@ -607,9 +617,7 @@ is short for
                  (list (getf on-frame :group)
                        (getf (getf on-frame :frame-plist) :number))))
   (when (and group frame)
-    (stumpbuffer-command "split-frame"
-                         (number-to-string group)
-                         (number-to-string frame)
+    (stumpbuffer-command "split-frame" group frame
                          "1")
     (stumpbuffer-update)))
 
@@ -619,9 +627,7 @@ is short for
                        (read-string (format "Rename '%s': "
                                             (getf gplist :name))))))
   (when group
-    (stumpbuffer-command "rename-group"
-                         (number-to-string group)
-                         new-name))
+    (stumpbuffer-command "rename-group" group new-name))
   (stumpbuffer-update))
 
 (defun stumpbuffer-rename-window (window-id new-name)
@@ -630,16 +636,13 @@ is short for
                        (read-string (format "Rename '%s': "
                                             (getf wplist :title))))))
   (when window-id
-    (stumpbuffer-command "rename-window"
-                         (number-to-string window-id)
-                         new-name))
+    (stumpbuffer-command "rename-window" window-id new-name))
   (stumpbuffer-update))
 
 (defun stumpbuffer-switch-to-group (group)
   (interactive (list (getf (sb--current-group-plist) :number)))
   (when group
-    (stumpbuffer-command "switch-to-group"
-                         (number-to-string group))
+    (stumpbuffer-command "switch-to-group" group)
     (when stumpbuffer-quit-window-after-command
       (stumpbuffer-quit-window))))
 
@@ -648,9 +651,7 @@ is short for
                  (list (getf frame :group)
                        (getf (getf frame :frame-plist) :number))))
   (when (and group frame)
-    (stumpbuffer-command "focus-frame"
-                         (number-to-string group)
-                         (number-to-string frame))
+    (stumpbuffer-command "focus-frame" group frame)
     (when stumpbuffer-quit-window-after-command
       (stumpbuffer-quit-window))))
 
@@ -659,9 +660,7 @@ is short for
                  (list (getf win :group)
                        (getf (getf win :window-plist) :id))))
   (when (and group window)
-    (stumpbuffer-command "focus-window"
-                         (number-to-string group)
-                         (number-to-string window))
+    (stumpbuffer-command "focus-window" group window)
     (when stumpbuffer-quit-window-after-command
       (stumpbuffer-quit-window))))
 
@@ -675,8 +674,7 @@ marked windows, the window at point will be pulled."
   (cl-flet ((pull-window (win)
                          (stumpbuffer-command
                           "pull-window"
-                          (number-to-string (getf (getf win :window-plist)
-                                                  :id)))))
+                          (getf (getf win :window-plist) :id))))
     (if window
         (pull-window window)
       (let (marksp)
@@ -696,12 +694,11 @@ marked windows, the window at point will be pulled."
 With a prefix argument this also switches to the group."
   (interactive (list (getf (sb--current-group-plist) :number)
                      current-prefix-arg))
-  (let ((target (number-to-string group-number)))
-    (stumpbuffer-do-marked-windows (win)
-      (when (char-equal ?* (getf win :mark))
-        (stumpbuffer-command "throw-window-to-group"
-                             (number-to-string (getf (getf win :window-plist) :id))
-                             target))))
+  (stumpbuffer-do-marked-windows (win)
+    (when (char-equal ?* (getf win :mark))
+      (stumpbuffer-command "throw-window-to-group"
+                           (getf (getf win :window-plist) :id)
+                           group-number)))
   (stumpbuffer-update)
   (when followp
     (stumpbuffer-switch-to-group group-number)))
@@ -714,12 +711,12 @@ With a prefix argument this also focuses the frame."
                  (list (getf frame :group)
                        (getf (getf frame :frame-plist) :number)
                        current-prefix-arg)))
-  (when-let ((target-group (number-to-string group))
-             (target-frame (number-to-string frame)))
+  (when-let ((target-group group)
+             (target-frame frame))
     (stumpbuffer-do-marked-windows (win)
       (when (char-equal ?* (getf win :mark))
         (stumpbuffer-command "throw-window-to-frame"
-                             (number-to-string (getf (getf win :window-plist) :id))
+                             (getf (getf win :window-plist) :id)
                              target-group
                              target-frame))))
   (stumpbuffer-update)
@@ -732,17 +729,16 @@ With a prefix argument this also focuses the frame."
 With a prefix argument this also focuses the window."
   (interactive (list (getf (sb--current-window-plist) :id)
                      current-prefix-arg))
-  (when-let ((target-window (number-to-string target-window-id)))
-    (stumpbuffer-do-marked-windows (win)
-      (when (char-equal ?* (getf win :mark))
-        (stumpbuffer-command "throw-window"
-                             (number-to-string (getf (getf win :window-plist) :id))
-                             target-window)))
-    (stumpbuffer-update)
-    (when followp
-      (let ((twindow (stumpbuffer-on-window)))
-        (stumpbuffer-focus-window (getf twindow :group)
-                                  target-window-id)))))
+  (stumpbuffer-do-marked-windows (win)
+    (when (char-equal ?* (getf win :mark))
+      (stumpbuffer-command "throw-window"
+                           (getf (getf win :window-plist) :id)
+                           target-window-id)))
+  (stumpbuffer-update)
+  (when followp
+    (let ((twindow (stumpbuffer-on-window)))
+      (stumpbuffer-focus-window (getf twindow :group)
+                                target-window-id))))
 
 (defun stumpbuffer-toggle-frame-showing ()
   (interactive)
