@@ -59,21 +59,6 @@
   :type 'hook
   :group 'stumpbuffer)
 
-(defcustom stumpbuffer-group-face 'font-lock-keyword-face
-  "Face used for the group name."
-  :type 'face
-  :group 'stumpbuffer)
-
-(defcustom stumpbuffer-frame-face 'font-lock-function-name-face
-  "Face used for the frame name."
-  :type 'face
-  :group 'stumpbuffer)
-
-(defcustom stumpbuffer-frame-size-face 'shadow
-  "Face used for the frame size."
-  :type 'face
-  :group 'stumpbuffer)
-
 (defcustom stumpbuffer-marked-face 'warning
   "Face used for marked windows."
   :type 'face
@@ -111,11 +96,11 @@ Only set to T if your Stumpwm supports that."
   "A list of functions to filter windows.")
 
 (defvar stumpbuffer-frame-name-format
-  `((,stumpbuffer-frame-face "Frame " :number)
-    (,stumpbuffer-frame-size-face " (" :width " x " :height ")")))
+  '((font-lock-function-name-face "Frame " :number)
+    (shadow " (" :width " x " :height ")")))
 
 (defvar stumpbuffer-group-name-format
-  `((,stumpbuffer-group-face
+  '((font-lock-keyword-face
      "[ " :number " " :name " ]"
      (:eval (when (eql type :float)
               " Float groups don't work yet!")))))
