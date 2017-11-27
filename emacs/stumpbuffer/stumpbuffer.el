@@ -173,6 +173,7 @@ Only set to T if your Stumpwm supports that."
     (define-key map (kbd "N") 'stumpbuffer-rename-window)
     (define-key map (kbd "s") 'stumpbuffer-split-window-frame-vertical)
     (define-key map (kbd "S") 'stumpbuffer-split-window-frame-horizontal)
+    (define-key map (kbd "r") 'stumpbuffer-renumber-window)
     map))
 
 (defvar stumpbuffer-mark-functions
@@ -655,6 +656,16 @@ is short for
                                             (getf wplist :title))))))
   (when window-id
     (stumpbuffer-command "rename-window" window-id new-name))
+  (stumpbuffer-update))
+
+(defun stumpbuffer-renumber-window (window-id new-number)
+  (interactive (let ((wplist (sb--current-window-plist)))
+                 (list (getf wplist :id)
+                       (read-string (format "Renumber '%s' from %d to: "
+                                            (getf wplist :title)
+                                            (getf wplist :number))))))
+  (when (and window-id new-number)
+    (stumpbuffer-command "renumber-window" window-id new-number))
   (stumpbuffer-update))
 
 (defun stumpbuffer-switch-to-group (group)

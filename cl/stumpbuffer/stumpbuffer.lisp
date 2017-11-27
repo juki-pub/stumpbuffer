@@ -204,6 +204,22 @@ respectively."
             (update-decoration (frame-window frame)))
           (error "Cannot split smaller than minimum size.")))))
 
+(defcommand stumpbuffer-renumber-window (window-id new-number)
+    ((:number "Window ID: ")
+     (:number "New number: "))
+  (with-simple-error-handling
+    (let* ((window (find-window-by-id window-id))
+           (current-number (window-number window))
+           (group (window-group window))
+           (old-window (find-if (lambda (win)
+                                  (= (window-number win) new-number))
+                                (group-windows group))))
+      (if (null old-window)
+          (setf (window-number window) new-number)
+          (setf (window-number old-window) current-number
+                (window-number window) new-number)))))
+
+
 (defvar *window-data-fields* nil)
 (defvar *group-data-fields* nil)
 (defvar *frame-data-fields* nil)
