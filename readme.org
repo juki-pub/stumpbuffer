@@ -64,6 +64,8 @@
   window). ~stumpbuffer-show-frames-p~ can be set to ~nil~ to hide
   frames from the list.
 
+** Window row format
+  
   The variable ~stumpbuffer-window-format~ determines which fields to
   show for windows. It should be a list of three element lists in form
 
@@ -79,6 +81,8 @@
   a single argument -- the value -- and returns a string that should
   be shown in its place.
 
+** Frame and group name format
+  
   The variables ~stumpbuffer-frame-name-format~ and
   ~stumpbuffer-group-name-format~ control the format of frame and
   group names. They should be lists of lists in form
@@ -97,6 +101,37 @@
   - A list ~(:call fn)~ :: Call ~fn~ with the plist. If it returns
        ~nil~, insert nothing. Otherwise insert the result.
 
+** Faces
+
+   Window names can be highlighted with custom faces. The variable
+   ~stumpbuffer-window-faces~ is an alist of ~(fn . face)~ pairs. The
+   ~face~ will be used for windows where ~fn~ return true.
+
+   For example, the default value
+
+   #+BEGIN_EXAMPLE
+     '((stumpbuffer-window-visible-p . bold)
+       (stumpbuffer-window-hidden-p . shadow))
+   #+END_EXAMPLE
+
+   will highlight all visible windows with the ~bold~ face, and hidden
+   windows (iconified windows) with ~shadow~. If you wanted to
+   highlight all Emacs windows with ~font-lock-string-face~, you could
+   put
+
+   #+BEGIN_EXAMPLE
+     (defun my-stumpbuffer-emacs-p (window)
+       (string-equal (getf window :class) "Emacs"))
+
+     (add-to-list 'stumpbuffer-window-faces
+                  '(my-stumpbuffer-emacs-p . font-lock-string-face))
+   #+END_EXAMPLE
+
+   in you Emacs init-file. Notice that all matching faces will be
+   added to the windows, in the order they appear in. So in this case
+   visible Emacs windows will have both ~bold~ and
+   ~font-lock-string-face~.
+   
 ** Filters
 
    The variable ~stumpbuffer-filter-groups~ contains a list of filter
@@ -148,7 +183,6 @@
    emacs. In other words, stick with keywords, numbers and strings.
 
 ** Emacs
-
 *** Key maps
 
     ~stumpbuffer-mode-map~ is for keys that are always active in the
@@ -202,13 +236,6 @@
     All of these have a corresponding macro
     ~stumpbuffer-do-<something>~.
    
-*** Faces
-
-    The variable ~stumpbuffer-window-faces~ is a list of ~(fn . face)~
-    pairs, where the ~fn~ is a function which takes a window plist
-    (the one retrieved from Stumpwm) as an argument, and returns true
-    if the window should be shown with the face.
-
 *** Communicating with Stumpwm
 
     Communication happens through stumpish. ~stumpbuffer-command~ can
