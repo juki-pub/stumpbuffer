@@ -324,7 +324,7 @@
       (interactive (let ((wplist (cl-getf (stumpbuffer-on-window) :window-plist)))
                      (list (cl-getf wplist :id)
                            (read-string "Tags: " (cl-getf wplist :tags))
-                           nil)))
+                           t)))
       (when (and window-id new-tags)
         (stumpbuffer-command "set-window-tags" window-id new-tags)
         (when updatep
