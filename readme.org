@@ -201,7 +201,11 @@
     ~stumpbuffer-mark-group~ and ~stumpbuffer-mark-frame~ will add a
     mark to all windows in the group or frame. They have a
     corresponding unmark function.
-   
+
+    When adding multiple marks, it's better to use
+    ~stumpbuffer-change-window-mark~. It doesn't have any other
+    side-effects.
+    
 *** Getting information about things at point
 
     ~stumpbuffer-on-group-name~, ~stumpbuffer-on-frame-name~ and
