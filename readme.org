@@ -320,13 +320,15 @@
   for window rows only using the ~stumpbuffer-mode-window-map~.
 
   #+BEGIN_EXAMPLE
-    (defun my-stumpbuffer-set-window-tags (window-id new-tags)
+    (defun my-stumpbuffer-set-window-tags (window-id new-tags &optional updatep)
       (interactive (let ((wplist (cl-getf (stumpbuffer-on-window) :window-plist)))
                      (list (cl-getf wplist :id)
-                           (read-string "Tags: " (cl-getf wplist :tags)))))
+                           (read-string "Tags: " (cl-getf wplist :tags))
+                           nil)))
       (when (and window-id new-tags)
         (stumpbuffer-command "set-window-tags" window-id new-tags)
-        (stumpbuffer-update)))
+        (when updatep
+          (stumpbuffer-update))))
 
     (define-key stumpbuffer-mode-window-map (kbd "t")
       'my-stumpbuffer-set-window-tags)
@@ -406,38 +408,42 @@
                                (unless (member tag tags)
                                  (my-stumpbuffer-set-window-tags
                                   (cl-getf wplist :id)
-                                  (my-stumpbuffer-concat-tags (cons tag tags)))))))
+                                  (my-stumpbuffer-concat-tags (cons tag tags))
+                                  nil)))))
         (let (marksp)
           (stumpbuffer-do-marked-windows (win)
             (let ((mark (cl-getf win :mark)))
               (when (char-equal mark ?*)
                 (setq marksp t)
                 (try-add-tag win)
-                (stumpbuffer-unmark))))
+                (stumpbuffer-change-window-mark win nil))))
           (unless marksp
             (when-let ((win (stumpbuffer-on-window)))
-              (try-add-tag win))))))
+              (try-add-tag win)))
+          (stumpbuffer-update))))
 
     (defun my-stumpbuffer-remove-tag (tag)
       (interactive (list (string-trim (read-string "Tag: "))))
       (cl-flet ((try-remove-tag (win)
-                             (let* ((wplist (cl-getf win :window-plist))
-                                    (tags (my-stumpbuffer-parse-tags
-                                           (cl-getf wplist :tags))))
-                               (when (member tag tags)
-                                 (my-stumpbuffer-set-window-tags
-                                  (cl-getf wplist :id)
-                                  (my-stumpbuffer-concat-tags (remove tag tags)))))))
+                                (let* ((wplist (cl-getf win :window-plist))
+                                       (tags (my-stumpbuffer-parse-tags
+                                              (cl-getf wplist :tags))))
+                                  (when (member tag tags)
+                                    (my-stumpbuffer-set-window-tags
+                                     (cl-getf wplist :id)
+                                     (my-stumpbuffer-concat-tags (remove tag tags))
+                                     nil)))))
         (let (marksp)
           (stumpbuffer-do-marked-windows (win)
             (let ((mark (cl-getf win :mark)))
               (when (char-equal mark ?*)
                 (setq marksp t)
                 (try-remove-tag win)
-                (stumpbuffer-unmark))))
+                (stumpbuffer-change-window-mark win nil))))
           (unless marksp
             (when-let ((win (stumpbuffer-on-window)))
-              (try-remove-tag win))))))
+              (try-remove-tag win)))
+          (stumpbuffer-update))))
 
     (define-key stumpbuffer-mode-map (kbd "+")
       'my-stumpbuffer-add-tag)
