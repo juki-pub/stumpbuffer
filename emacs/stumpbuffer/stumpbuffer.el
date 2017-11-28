@@ -150,6 +150,9 @@ Only set to T if your Stumpwm supports that."
     (define-key map (kbd "`") 'stumpbuffer-cycle-filter-groups)
     (define-key map (kbd "^") 'stumpbuffer-select-filter-group)
     (define-key map (kbd "\\") 'stumpbuffer-pop-quick-filter)
+    (define-key map (kbd "/ h") 'stumpbuffer-push-hide-hidden-groups-filter)
+    (define-key map (kbd "/ H") 'stumpbuffer-push-show-hidden-groups-filter)
+    (define-key map (kbd "/ r") 'stumpbuffer-push-show-matching-windows-filter)
     map))
 
 (defvar stumpbuffer-mode-group-map
@@ -872,11 +875,42 @@ With a prefix argument this also focuses the window."
 
 (defun stumpbuffer-pop-quick-filter (n)
   (interactive "p")
-  (pop stumpbuffer-quick-filter-stack)
-  (stumpbuffer-update))
+  (if (null stumpbuffer-quick-filter-stack)
+      (message "Quick filter stack empty.")
+    (progn
+      (if (>= n 0)
+          (message "Popped: %s"
+                   (pop stumpbuffer-quick-filter-stack))
+        (setq stumpbuffer-quick-filter-stack nil)
+        (message "Cleared quick filters."))
+      (stumpbuffer-update))))
 
 (defun stumpbuffer-push-quick-filter (filter)
-  (push filter stumpbuffer-quick-filter-stack))
+  (cl-pushnew filter stumpbuffer-quick-filter-stack
+              :test #'equal))
+
+(defun stumpbuffer-push-hide-hidden-groups-filter ()
+  (interactive)
+  (stumpbuffer-push-quick-filter
+   '(:hide-groups :satisfying stumpbuffer-group-hidden-p))
+  (stumpbuffer-update))
+
+(defun stumpbuffer-push-show-hidden-groups-filter ()
+  (interactive)
+  (stumpbuffer-push-quick-filter
+   '(:show-groups :satisfying stumpbuffer-group-hidden-p))
+  (stumpbuffer-update))
+
+(defun sb--title-matcher-filter (regex)
+  (lambda (window)
+    (when-let ((title (cl-getf window :title)))
+      (string-match regex title))))
+
+(defun stumpbuffer-push-show-matching-windows-filter (regex)
+  (interactive (list (read-string "Match title: ")))
+  (stumpbuffer-push-quick-filter
+   `(:show-windows :satisfying ,(sb--title-matcher-filter regex)))
+  (stumpbuffer-update))
 
 
 ;;; Retrieving data and updating

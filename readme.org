@@ -58,7 +58,11 @@
   | ~r~       | Renumber group or window                                                                |
   | ~`~       | Cycle filter groups                                                                     |
   | ~^~       | Select filter group by name                                                             |
-
+  | ~/ h~     | Push quick filter to hide hidden groups                                                 |
+  | ~/ H~     | Push a quick filter to only show hidden groups                                          |
+  | ~/ r~     | Push quick filter to only show windows with a title matching a regex                    |
+  | ~\~       | Pop the quick filter stack. Positive numeric argument pops multiple, negative pops all. |
+  
   The customization option ~stumpbuffer-quit-window-after-command~
   determines whether the buffer should be killed when executing
   certain commands (such as focusing a
@@ -170,6 +174,16 @@
    Stumpwm provides ~:hiddenp~ in group plists to tell whether it is a
    hidden group.
   
+** Quick filters
+
+   Quick filters are filters that are pushed onto a buffer local
+   stack. Their syntax is the same as predefined filters. They can be
+   pushed to the stack with keyindings starting with ~/~ and popped
+   with ~\~.
+
+   For example, to quickly filter down to windows whose title contains
+   the "emacs", use ~/ r emacs RET~. Use ~\~ will remove the filter.
+   
 * Extending
 
 ** Stumpwm
