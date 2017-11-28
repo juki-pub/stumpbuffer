@@ -292,79 +292,90 @@ signalled with the message."
 
 ;;; Navigating
 
-(defun stumpbuffer-forward-line ()
+(defun stumpbuffer-forward-line (n)
   "Move forward one line. Wraps around."
-  (interactive)
-  (beginning-of-line)
-  (forward-line 1)
-  (when (eobp)
-    (goto-char (point-min))))
+  (interactive "p")
+  (when (> n 0)
+    (beginning-of-line)
+    (forward-line 1)
+    (when (eobp)
+      (goto-char (point-min)))
+    (stumpbuffer-forward-line (1- n))))
 
-(defun stumpbuffer-backward-line ()
+(defun stumpbuffer-backward-line (n)
   "Move backward one line. Wraps around."
-  (interactive)
-  (when (= (point) (point-min))
-    (goto-char (point-max)))
-  (beginning-of-line)
-  (forward-line -1))
+  (interactive "p")
+  (when (> n 0)
+    (when (= (point) (point-min))
+      (goto-char (point-max)))
+    (beginning-of-line)
+    (forward-line -1)
+    (stumpbuffer-backward-line (1- n))))
 
-(defun stumpbuffer-forward-frame ()
+(defun stumpbuffer-forward-frame (n)
   "Move to the next frame name. Wraps around."
-  (interactive)
-  (if (not stumpbuffer-show-frames-p)
-      (stumpbuffer-forward-line)
-    (when (stumpbuffer-on-frame-name)
-      (stumpbuffer-forward-line))
+  (interactive "p")
+  (when (> n 0)
+    (if (not stumpbuffer-show-frames-p)
+        (stumpbuffer-forward-line n)
+      (when (stumpbuffer-on-frame-name)
+        (stumpbuffer-forward-line 1))
+      (goto-char (next-single-property-change (point)
+                                              'stumpbuffer-frame-number
+                                              nil
+                                              (point-max)))
+      (when (= (point) (point-max))
+        (goto-char (point-min))
+        (stumpbuffer-forward-frame 1))
+      (beginning-of-line)
+      (stumpbuffer-forward-frame (1- n)))))
+
+(defun stumpbuffer-backward-frame (n)
+  "Move to the previous frame name. Wraps around."
+  (interactive "p")
+  (when (> n 0)
+    (if (not stumpbuffer-show-frames-p)
+        (stumpbuffer-backward-line n)
+      (goto-char (previous-single-property-change (point)
+                                                  'stumpbuffer-frame-number
+                                                  nil
+                                                  (point-min)))
+      (when (= (point) (point-min))
+        (goto-char (point-max))
+        (stumpbuffer-backward-frame 1))
+      (beginning-of-line)
+      (stumpbuffer-backward-frame (1- n)))))
+
+(defun stumpbuffer-forward-group (n)
+  "Move to the next group name. Wraps around."
+  (interactive "p")
+  (when (> n 0)
+    (when (stumpbuffer-on-group-name)
+      (stumpbuffer-forward-line 1))
     (goto-char (next-single-property-change (point)
-                                            'stumpbuffer-frame-number
+                                            'stumpbuffer-group-number
                                             nil
                                             (point-max)))
     (when (= (point) (point-max))
-      (goto-char (point-min))
-      (stumpbuffer-forward-frame))
-    (beginning-of-line)))
+      (goto-char (point-min)))
+    (beginning-of-line)
+    (stumpbuffer-forward-group (1- n))))
 
-(defun stumpbuffer-backward-frame ()
-  "Move to the previous frame name. Wraps around."
-  (interactive)
-  (if (not stumpbuffer-show-frames-p)
-      (stumpbuffer-backward-line)
+(defun stumpbuffer-backward-group (n)
+  "Move to the previous group name. Wraps around."
+  (interactive "p")
+  (when (> n 0)
+    (when (stumpbuffer-on-group-name)
+      (stumpbuffer-backward-line 1))
     (goto-char (previous-single-property-change (point)
-                                                'stumpbuffer-frame-number
+                                                'stumpbuffer-group-number
                                                 nil
                                                 (point-min)))
     (when (= (point) (point-min))
       (goto-char (point-max))
-      (stumpbuffer-backward-frame))
-    (beginning-of-line)))
-
-(defun stumpbuffer-forward-group ()
-  "Move to the next group name. Wraps around."
-  (interactive)
-  (when (stumpbuffer-on-group-name)
-    (stumpbuffer-forward-line))
-  (goto-char (next-single-property-change (point)
-                                          'stumpbuffer-group-number
-                                          nil
-                                          (point-max)))
-  (when (= (point) (point-max))
-    (goto-char (point-min)))
-  (beginning-of-line))
-
-(defun stumpbuffer-backward-group ()
-  "Move to the previous group name. Wraps around."
-  (interactive)
-  (when (stumpbuffer-on-group-name)
-    (stumpbuffer-backward-line))
-  (goto-char (previous-single-property-change (point)
-                                              'stumpbuffer-group-number
-                                              nil
-                                              (point-min)))
-  (when (= (point) (point-min))
-    (goto-char (point-max))
-    (stumpbuffer-backward-group))
-  (beginning-of-line))
-
+      (stumpbuffer-backward-group 1))
+    (beginning-of-line)
+    (stumpbuffer-backward-group (1- n))))
 
 ;;; Iterating things
 
@@ -412,7 +423,7 @@ is short for
 (defun stumpbuffer-map-group-windows (fn)
   (save-excursion
     (unless (stumpbuffer-on-group-name)
-      (stumpbuffer-backward-group))
+      (stumpbuffer-backward-group 1))
     (forward-line)
     (while (not (or (eobp)
                     (stumpbuffer-on-group-name)))
@@ -473,7 +484,7 @@ is short for
   (when group
     (stumpbuffer-do-group-windows (win)
       (stumpbuffer-change-window-mark win mark))
-    (stumpbuffer-forward-group)))
+    (stumpbuffer-forward-group 1)))
 
 (defun stumpbuffer-mark-frame (mark)
   "If point is on a frame, mark all windows in it."
@@ -482,14 +493,14 @@ is short for
     (stumpbuffer-do-group-windows (win)
       (when (= frame-num (cl-getf (cl-getf win :window-plist) :frame))
         (stumpbuffer-change-window-mark win mark)))
-    (stumpbuffer-forward-frame)))
+    (stumpbuffer-forward-frame 1)))
 
 (defun stumpbuffer-mark (mark)
   "If point is on a window, mark it."
   (interactive (list (sb--maybe-prompt-for-mark ?*)))
   (when-let ((win (stumpbuffer-on-window)))
     (stumpbuffer-change-window-mark win mark)
-    (stumpbuffer-forward-line)))
+    (stumpbuffer-forward-line 1)))
 
 (defun stumpbuffer-unmark-group (group)
   "If point is on group, unmark all windows in it."
@@ -539,12 +550,12 @@ is short for
 (defun stumpbuffer-mark-frame-for-delete (frame)
   (interactive (list (cl-getf (sb--current-frame-plist) :number)))
   (stumpbuffer-mark-by-frame frame ?D)
-  (stumpbuffer-forward-frame))
+  (stumpbuffer-forward-frame 1))
 
 (defun stumpbuffer-mark-frame-for-kill (frame)
   (interactive (list (cl-getf (sb--current-frame-plist) :number)))
   (stumpbuffer-mark-by-frame frame ?K)
-  (stumpbuffer-forward-frame))
+  (stumpbuffer-forward-frame 1))
 
 (defun stumpbuffer-mark-group-for-delete (group)
   (interactive (list (cl-getf (sb--current-group-plist) :number)))
@@ -1131,7 +1142,7 @@ With a prefix argument this also focuses the window."
                  (when position (goto-char position)))))
          (t (goto-char (point-min))
             (dotimes (i position)
-              (stumpbuffer-forward-line))))))))
+              (stumpbuffer-forward-line 1))))))))
 
 
 ;;; Entry / exit
