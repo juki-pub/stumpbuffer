@@ -146,10 +146,12 @@
    ~:show-windows~. The ~:hide-~ variants hide matching windows or
    groups, while the ~:show-~ variants hide non-matching ones.
 
-   ~how~ is the actual filter. It can currently only be a list in form
-   ~(:satisfying fn)~. The ~fn~ is a function to be called with the
-   group or window plist (as retrieved from Stumpwm). If it returns
-   true, the filter applies.
+   ~how~ is the actual filter. The currently implemented filters are:
+
+   - ~(:satisfying fn)~ :: Matches if calling ~fn~ on the group or
+        window plist returns true.
+   - ~(:where field :matches regex)~ :: Matches if ~field~ in the
+        group or window plist matches the regular expression ~regex~.
 
    For example (the default value),
 

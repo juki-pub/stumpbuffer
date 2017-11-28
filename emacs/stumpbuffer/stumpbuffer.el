@@ -901,15 +901,10 @@ With a prefix argument this also focuses the window."
    '(:show-groups :satisfying stumpbuffer-group-hidden-p))
   (stumpbuffer-update))
 
-(defun sb--title-matcher-filter (regex)
-  (lambda (window)
-    (when-let ((title (cl-getf window :title)))
-      (string-match regex title))))
-
 (defun stumpbuffer-push-show-matching-windows-filter (regex)
   (interactive (list (read-string "Match title: ")))
   (stumpbuffer-push-quick-filter
-   `(:show-windows :satisfying ,(sb--title-matcher-filter regex)))
+   `(:show-windows :where :title :matches ,regex))
   (stumpbuffer-update))
 
 
@@ -938,7 +933,11 @@ With a prefix argument this also focuses the window."
 
 (defun sb--match-filter (how plist)
   (pcase how
-    (`(:satisfying ,fn) (funcall fn plist))))
+    (`(:satisfying ,fn) (funcall fn plist))
+    (`(:where ,field :matches ,regex)
+     (when-let ((val (cl-getf plist field)))
+       (and (stringp val)
+            (string-match regex val))))))
 
 (defun sb--filter-window-p (window)
   (cl-flet ((match-filter (filter)
