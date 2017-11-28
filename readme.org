@@ -274,7 +274,7 @@
     (defvar *window-tags* (make-hash-table :weakness :key))
 
     (defun window-tags (window)
-      (gethash window *window-tags* "")) ;Return an empty string if no tags.
+      (gethash window *window-tags* ":")) ;Use : for empty taglist
 
     (defun (setf window-tags) (new-value window)
       (setf (gethash window *window-tags*) new-value))
