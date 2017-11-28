@@ -256,3 +256,193 @@
     
     Notice that since the communication goes through stumpish, the CL
     code must use ~MESSAGE~ to return values.
+* Example
+
+  Let's say we want to add some kind of a window tagging
+  feature. We'll use an org-mode like syntax for tags:
+  ~:foo:bar:quux:~. The tags can be used to mark windows with a tag
+  query. The query syntax is also org-mode:ish:
+
+  - ~foo~ :: Match windows with a foo tag.
+  - ~+foo -bar~ :: Match windows with a ~foo~ tag, but no ~bar~ tag.
+  - ~foo-bar+quux~ :: Match ~foo~ and ~quux~ and no ~bar~.
+
+  First, we need to store the tags somehow in Stumpwm. Let's just use
+  a simple weak hash table (with SBCL).
+
+  #+BEGIN_EXAMPLE
+    (defvar *window-tags* (make-hash-table :weakness :key))
+
+    (defun window-tags (window)
+      (gethash window *window-tags* "")) ;Return an empty string if no tags.
+
+    (defun (setf window-tags) (new-value window)
+      (setf (gethash window *window-tags*) new-value))
+  #+END_EXAMPLE
+
+  Then we must add the tags to the custom data fields for windows.
+
+  #+BEGIN_EXAMPLE
+    (pushnew (cons :tags 'window-tags) stumpbuffer:*window-data-fields*
+             :test #'equal)
+  #+END_EXAMPLE
+
+  And make a command to set new tags. This has a slight problem of not
+  accepting an empty string through Stumpish. We work around that in
+  Emacs by adding a ~:~ instead of empty tag list.
+  
+  #+BEGIN_EXAMPLE
+    (defcommand stumpbuffer-set-window-tags (window-id new-tags)
+        ((:number "Window- ID")
+         (:string "Tags: "))
+      (stumpbuffer:with-simple-error-handling
+        (let ((window (stumpbuffer:find-window-by-id window-id)))
+          (setf (window-tags window) (or new-tags "")))))
+  #+END_EXAMPLE
+
+  That's all we need on the Stumpwm side, because we're not really
+  interested in doing anything with the tags in Stumpwm itself. For
+  Emacs we have to write a bit more code to manage the tags with.
+
+  First, make the tag field visible.
+
+  #+BEGIN_EXAMPLE
+    (setq stumpbuffer-window-format
+          '((:number 3 "N")
+            (:title 35 "Title")
+            (:class 10 "Class")
+            (:role 10 "Role")
+            (:instance 10 "Instance")
+            (:tags nil "Tags")))
+  #+END_EXAMPLE
+
+  Then add a simple command to edit tags. We'll also bind it to ~t~
+  for window rows only using the ~stumpbuffer-mode-window-map~.
+
+  #+BEGIN_EXAMPLE
+    (defun my-stumpbuffer-set-window-tags (window-id new-tags)
+      (interactive (let ((wplist (cl-getf (stumpbuffer-on-window) :window-plist)))
+                     (list (cl-getf wplist :id)
+                           (read-string "Tags: " (cl-getf wplist :tags)))))
+      (when (and window-id new-tags)
+        (stumpbuffer-command "set-window-tags" window-id new-tags)
+        (stumpbuffer-update)))
+
+    (define-key stumpbuffer-mode-window-map (kbd "t")
+      'my-stumpbuffer-set-window-tags)
+  #+END_EXAMPLE
+
+  For queries we'll have to write some code to parse the tags and the
+  query strings and match them.
+
+  #+BEGIN_EXAMPLE
+    (defun my-stumpbuffer-parse-query (query)
+      (cl-loop with start-pos = 0
+               for match-pos = (string-match
+                                "\\(\\(?: \\|^\\|\\+\\|-\\)[^ +-]+\\)"
+                                query start-pos)
+               while match-pos
+               collect (let ((match (string-trim (match-string 1 query))))
+                         (cl-case (aref match 0)
+                           (?+ (cons :positive (subseq match 1)))
+                           (?- (cons :negative (subseq match 1)))
+                           (otherwise (cons :positive match))))
+               do (setq start-pos (1+ match-pos))))
+
+    (defun my-stumpbuffer-parse-tags (tags)
+      (cl-loop with start-pos = 0
+               for match-pos = (string-match ":\\([^:]+\\)" tags start-pos)
+               while match-pos
+               collect (match-string 1 tags)
+               do (setq start-pos (1+ match-pos))))
+
+    (defun my-stumpbuffer-match-tags (tags parsed-query)
+      (let ((parsed-tags (my-stumpbuffer-parse-tags tags)))
+        (cl-every (lambda (query-part)
+                    (cl-destructuring-bind (type . tag) query-part
+                      (cl-case type
+                        (:positive (member tag parsed-tags))
+                        (:negative (not (member tag parsed-tags))))))
+                  parsed-query)))
+  #+END_EXAMPLE
+
+  With these it's easy to write a command to mark windows by a tag
+  query. We'll bind it to ~% t~ in the whole buffer.
+
+  #+BEGIN_EXAMPLE
+    (defun my-stumpbuffer-mark-windows-by-tag-query (query mark)
+      (interactive (list (read-string "Query: ")
+                         (if current-prefix-arg
+                             (read-char "Mark: ")
+                           ?*)))
+      (let ((parsed-query (my-stumpbuffer-parse-query query)))
+        (stumpbuffer-do-windows (win)
+          (let ((tags (cl-getf (cl-getf win :window-plist) :tags)))
+            (when (my-stumpbuffer-match-tags tags parsed-query)
+              (stumpbuffer-mark mark))))))
+
+    (define-key stumpbuffer-mode-map (kbd "% t")
+      'my-stumpbuffer-mark-windows-by-tag-query)
+  #+END_EXAMPLE
+
+  Let's also write commands to add or remove a single tag from marked
+  windows (or the highlighted one). Those will be bound to ~+~ and ~-~
+  respectively.
+
+  #+BEGIN_EXAMPLE
+    (defun my-stumpbuffer-concat-tags (tags)
+      (with-output-to-string
+        (write-char ?:)
+        (cl-loop for tag in (cl-remove-duplicates tags :test #'string-equal)
+                 do (princ tag)
+                 (write-char ?:))))
+
+    (defun my-stumpbuffer-add-tag (tag)
+      (interactive (list (string-trim (read-string "Tag: "))))
+      (cl-flet ((try-add-tag (win)
+                             (let* ((wplist (cl-getf win :window-plist))
+                                    (tags (my-stumpbuffer-parse-tags
+                                           (cl-getf wplist :tags))))
+                               (unless (member tag tags)
+                                 (my-stumpbuffer-set-window-tags
+                                  (cl-getf wplist :id)
+                                  (my-stumpbuffer-concat-tags (cons tag tags)))))))
+        (let (marksp)
+          (stumpbuffer-do-marked-windows (win)
+            (let ((mark (cl-getf win :mark)))
+              (when (char-equal mark ?*)
+                (setq marksp t)
+                (try-add-tag win)
+                (stumpbuffer-unmark))))
+          (unless marksp
+            (when-let ((win (stumpbuffer-on-window)))
+              (try-add-tag win))))))
+
+    (defun my-stumpbuffer-remove-tag (tag)
+      (interactive (list (string-trim (read-string "Tag: "))))
+      (cl-flet ((try-remove-tag (win)
+                             (let* ((wplist (cl-getf win :window-plist))
+                                    (tags (my-stumpbuffer-parse-tags
+                                           (cl-getf wplist :tags))))
+                               (when (member tag tags)
+                                 (my-stumpbuffer-set-window-tags
+                                  (cl-getf wplist :id)
+                                  (my-stumpbuffer-concat-tags (remove tag tags)))))))
+        (let (marksp)
+          (stumpbuffer-do-marked-windows (win)
+            (let ((mark (cl-getf win :mark)))
+              (when (char-equal mark ?*)
+                (setq marksp t)
+                (try-remove-tag win)
+                (stumpbuffer-unmark))))
+          (unless marksp
+            (when-let ((win (stumpbuffer-on-window)))
+              (try-remove-tag win))))))
+
+    (define-key stumpbuffer-mode-map (kbd "+")
+      'my-stumpbuffer-add-tag)
+
+    (define-key stumpbuffer-mode-map (kbd "-")
+      'my-stumpbuffer-remove-tag)
+  #+END_EXAMPLE
+  

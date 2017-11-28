@@ -47,6 +47,11 @@
            #:*frame-data-fields*
            #:*group-data-fields*
 
+           #:with-simple-error-handling
+           #:find-window-by-id
+           #:find-group-by-number
+           #:find-frame-by-group-and-number
+
            #:stumpbuffer-kill-group
            #:stumpbuffer-get-data
            #:stumpbuffer-pull-window

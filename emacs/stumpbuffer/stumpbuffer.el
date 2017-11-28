@@ -227,7 +227,7 @@ signalled with the message."
         (when-let (result (prog1 (read m)
                             (kill-buffer)))
           (if (and (listp result)
-                   (eql :error (first result)))
+                   (eql :error (car result)))
               (error "StumpBuffer error: %s" (second result))
             result))))))
 
@@ -844,7 +844,7 @@ With a prefix argument this also focuses the window."
   (when group-name
     (setq sb--active-filter-group-n
           (or (cl-position group-name stumpbuffer-filter-groups
-                           :key #'first
+                           :key #'car
                            :test #'string-equal)
               (error "No such filter group: %s" group-name))
           sb--active-filter-group
@@ -885,7 +885,7 @@ With a prefix argument this also focuses the window."
                (case what
                  (:hide-windows (sb--match-filter how group))
                  (:show-windows (not (sb--match-filter how group))))))
-           (if (stringp (first sb--active-filter-group))
+           (if (stringp (car sb--active-filter-group))
                (rest sb--active-filter-group)
              sb--active-filter-group)))
 
@@ -944,7 +944,7 @@ With a prefix argument this also focuses the window."
         (dolist (thing things)
           (typecase thing
             (list
-             (when (eql (first thing) :call)
+             (when (eql (car thing) :call)
                (when-let ((value (funcall (second thing) plist)))
                  (insert value))))
             (string (insert thing))
@@ -977,7 +977,7 @@ With a prefix argument this also focuses the window."
                (case what
                  (:hide-groups (sb--match-filter how group))
                  (:show-groups (not (sb--match-filter how group))))))
-           (if (stringp (first sb--active-filter-group))
+           (if (stringp (car sb--active-filter-group))
                (rest sb--active-filter-group)
              sb--active-filter-group)))
 
