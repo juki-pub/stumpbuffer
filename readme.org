@@ -58,9 +58,9 @@
   | ~r~       | Renumber group or window                                                                |
   | ~`~       | Cycle filter groups                                                                     |
   | ~^~       | Select filter group by name                                                             |
-  | ~/ h~     | Push quick filter to hide hidden groups                                                 |
+  | ~/ h~     | Push a quick filter to hide hidden groups                                               |
   | ~/ H~     | Push a quick filter to only show hidden groups                                          |
-  | ~/ r~     | Push quick filter to only show windows with a title matching a regex                    |
+  | ~/ r~     | Push a quick filter to only show windows with a title matching a regex                  |
   | ~\~       | Pop the quick filter stack. Positive numeric argument pops multiple, negative pops all. |
   
   The customization option ~stumpbuffer-quit-window-after-command~
@@ -178,7 +178,7 @@
 
    Quick filters are filters that are pushed onto a buffer local
    stack. Their syntax is the same as predefined filters. They can be
-   pushed to the stack with keyindings starting with ~/~ and popped
+   pushed to the stack with key bindings starting with ~/~ and popped
    with ~\~.
 
    For example, to quickly filter down to windows whose title contains
