@@ -200,9 +200,9 @@ Only set to T if your Stumpwm supports that."
 ;;; Executing commands
 
 (defun sb--process-arg (arg)
-  (typecase arg
+  (cl-typecase arg
     (string (if (and stumpbuffer-stumpish-quote-arguments-with-spaces-p
-                     (position ?\s arg))
+                     (cl-position ?\s arg))
                 (format "\"%s\"" (replace-regexp-in-string "\"" "\\\\\"" arg))
               arg))
     (number (number-to-string arg))))
@@ -228,7 +228,7 @@ signalled with the message."
                             (kill-buffer)))
           (if (and (listp result)
                    (eql :error (car result)))
-              (error "StumpBuffer error: %s" (second result))
+              (error "StumpBuffer error: %s" (cl-second result))
             result))))))
 
 
@@ -261,24 +261,24 @@ signalled with the message."
   (when-let ((window (get-text-property (point) 'stumpbuffer-window)))
     (let ((group (get-text-property (point) 'stumpbuffer-group))
           (frame (get-text-property (point) 'stumpbuffer-frame)))
-      (list* :group group
-             :frame frame
-             :start (point-at-bol)
-             :end (point-at-eol)
-             :window-plist (get-text-property (point) 'stumpbuffer-window-plist)
-             (when-let ((mark (get-text-property (point) 'stumpbuffer-mark)))
-               (list :mark mark))))))
+      (cl-list* :group group
+                :frame frame
+                :start (point-at-bol)
+                :end (point-at-eol)
+                :window-plist (get-text-property (point) 'stumpbuffer-window-plist)
+                (when-let ((mark (get-text-property (point) 'stumpbuffer-mark)))
+                  (list :mark mark))))))
 
 (defun sb--current-window-plist ()
   (cl-getf (stumpbuffer-on-window) :window-plist))
 
 (defun sb--get-window-face (window)
   "Get the appropriate face for window."
-  (let (faces)
-   (dolist (pair stumpbuffer-window-faces faces)
-     (destructuring-bind (fn . face) pair
-       (when (funcall fn window)
-         (push face faces))))))
+  (let ((faces '()))
+    (dolist (pair stumpbuffer-window-faces faces)
+      (cl-destructuring-bind (fn . face) pair
+        (when (funcall fn window)
+          (push face faces))))))
 
 
 ;;; Navigating
@@ -844,7 +844,7 @@ With a prefix argument this also focuses the window."
   (when group-name
     (setq sb--active-filter-group-n
           (or (cl-position group-name stumpbuffer-filter-groups
-                           :key #'car
+                           :key #'cl-first
                            :test #'string-equal)
               (error "No such filter group: %s" group-name))
           sb--active-filter-group
@@ -862,7 +862,8 @@ With a prefix argument this also focuses the window."
   (let ((header (with-output-to-string
                   (princ "  M ")
                   (dolist (field stumpbuffer-window-format)
-                    (destructuring-bind (field &optional width title format-fn)
+                    (cl-destructuring-bind (field &optional width
+                                                  title format-fn)
                         field
                       (let* ((title (or title (symbol-name field)))
                              (len (length title))
@@ -881,12 +882,12 @@ With a prefix argument this also focuses the window."
 
 (defun sb--filter-window-p (group)
   (cl-some (lambda (filter)
-             (destructuring-bind (what &rest how) filter
-               (case what
+             (cl-destructuring-bind (what &rest how) filter
+               (cl-case what
                  (:hide-windows (sb--match-filter how group))
                  (:show-windows (not (sb--match-filter how group))))))
            (if (stringp (car sb--active-filter-group))
-               (rest sb--active-filter-group)
+               (cl-rest sb--active-filter-group)
              sb--active-filter-group)))
 
 (defmacro sb--with-properties (properties &rest body)
@@ -915,7 +916,7 @@ With a prefix argument this also focuses the window."
               'face                      (sb--get-window-face window-plist))
       (insert "    ")
       (dolist (field stumpbuffer-window-format)
-        (destructuring-bind (field &optional width title format-fn)
+        (cl-destructuring-bind (field &optional width title format-fn)
             field
           (let* ((entry (format "%s"
                                 (if-let ((value (cl-getf window-plist field)))
@@ -939,23 +940,23 @@ With a prefix argument this also focuses the window."
 
 (defun sb--insert-format (plist format)
   (dolist (part format)
-    (destructuring-bind (faces &rest things) part
+    (cl-destructuring-bind (faces &rest things) part
       (sb--with-property 'face faces
         (dolist (thing things)
-          (typecase thing
+          (cl-typecase thing
             (list
              (when (eql (car thing) :call)
-               (when-let ((value (funcall (second thing) plist)))
+               (when-let ((value (funcall (cl-second thing) plist)))
                  (insert value))))
             (string (insert thing))
             (keyword
              (let ((value (cl-getf plist thing "")))
-               (typecase value
+               (cl-typecase value
                  (string (insert value))
                  (number (insert (number-to-string value))))))))))))
 
 (defun sb--insert-frame (frame-plist)
-  (destructuring-bind (&key number windows &allow-other-keys)
+  (cl-destructuring-bind (&key number windows &allow-other-keys)
       frame-plist
     (when stumpbuffer-show-frames-p
       (sb--with-properties
@@ -973,17 +974,17 @@ With a prefix argument this also focuses the window."
 
 (defun sb--filter-group-p (group)
   (cl-some (lambda (filter)
-             (destructuring-bind (what &rest how) filter
-               (case what
+             (cl-destructuring-bind (what &rest how) filter
+               (cl-case what
                  (:hide-groups (sb--match-filter how group))
                  (:show-groups (not (sb--match-filter how group))))))
            (if (stringp (car sb--active-filter-group))
-               (rest sb--active-filter-group)
+               (cl-rest sb--active-filter-group)
              sb--active-filter-group)))
 
 (defun sb--insert-group (group-plist)
   (unless (sb--filter-group-p group-plist)
-    (destructuring-bind (&key number name frames windows type &allow-other-keys)
+    (cl-destructuring-bind (&key number name frames windows type &allow-other-keys)
         group-plist
       (sb--with-properties
           (list 'keymap                    stumpbuffer-mode-group-map
