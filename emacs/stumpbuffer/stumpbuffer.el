@@ -123,6 +123,8 @@ Only set to T if your Stumpwm supports that."
     ("Only hidden groups"
      (:show-groups :satisfying stumpbuffer-group-hidden-p))))
 
+(defvar stumpbuffer-quick-filter-stack nil)
+
 (defvar stumpbuffer-mode-map
   (let ((map (make-keymap)))
     (define-key map (kbd "n") 'stumpbuffer-forward-line)
@@ -147,6 +149,7 @@ Only set to T if your Stumpwm supports that."
     (define-key map (kbd "f") 'stumpbuffer-toggle-frame-showing)
     (define-key map (kbd "`") 'stumpbuffer-cycle-filter-groups)
     (define-key map (kbd "^") 'stumpbuffer-select-filter-group)
+    (define-key map (kbd "\\") 'stumpbuffer-pop-quick-filter)
     map))
 
 (defvar stumpbuffer-mode-group-map
@@ -867,6 +870,14 @@ With a prefix argument this also focuses the window."
                stumpbuffer-filter-groups)))
   (stumpbuffer-update))
 
+(defun stumpbuffer-pop-quick-filter (n)
+  (interactive "p")
+  (pop stumpbuffer-quick-filter-stack)
+  (stumpbuffer-update))
+
+(defun stumpbuffer-push-quick-filter (filter)
+  (push filter stumpbuffer-quick-filter-stack))
+
 
 ;;; Retrieving data and updating
 
@@ -895,15 +906,18 @@ With a prefix argument this also focuses the window."
   (pcase how
     (`(:satisfying ,fn) (funcall fn plist))))
 
-(defun sb--filter-window-p (group)
-  (cl-some (lambda (filter)
-             (cl-destructuring-bind (what &rest how) filter
-               (cl-case what
-                 (:hide-windows (sb--match-filter how group))
-                 (:show-windows (not (sb--match-filter how group))))))
-           (if (stringp (car sb--active-filter-group))
-               (cl-rest sb--active-filter-group)
-             sb--active-filter-group)))
+(defun sb--filter-window-p (window)
+  (cl-flet ((match-filter (filter)
+                          (cl-destructuring-bind (what &rest how) filter
+                            (cl-case what
+                              (:hide-windows (sb--match-filter how window))
+                              (:show-windows (not (sb--match-filter how window)))))))
+    (or (cl-some #'match-filter
+                 (if (stringp (car sb--active-filter-group))
+                     (cl-rest sb--active-filter-group)
+                   sb--active-filter-group))
+        (cl-some #'match-filter
+                 stumpbuffer-quick-filter-stack))))
 
 (defmacro sb--with-properties (properties &rest body)
   "Add properties to text inserted by the body."
@@ -988,14 +1002,17 @@ With a prefix argument this also focuses the window."
        'stumpbuffer-frame number))))
 
 (defun sb--filter-group-p (group)
-  (cl-some (lambda (filter)
-             (cl-destructuring-bind (what &rest how) filter
-               (cl-case what
-                 (:hide-groups (sb--match-filter how group))
-                 (:show-groups (not (sb--match-filter how group))))))
-           (if (stringp (car sb--active-filter-group))
-               (cl-rest sb--active-filter-group)
-             sb--active-filter-group)))
+  (cl-flet ((match-filter (filter)
+                          (cl-destructuring-bind (what &rest how) filter
+                            (cl-case what
+                              (:hide-groups (sb--match-filter how group))
+                              (:show-groups (not (sb--match-filter how group)))))))
+    (or (cl-some #'match-filter
+                 (if (stringp (car sb--active-filter-group))
+                     (cl-rest sb--active-filter-group)
+                   sb--active-filter-group))
+        (cl-some #'match-filter
+                 stumpbuffer-quick-filter-stack))))
 
 (defun sb--insert-group (group-plist)
   (unless (sb--filter-group-p group-plist)
@@ -1093,8 +1110,7 @@ can be used to open a buffer from outside emacs."
   (hl-line-mode)
   (setq truncate-lines t)
   (set (make-local-variable 'sb--kill-frame-on-exit-p) nil)
-  (make-local-variable 'stumpbuffer-group-filters)
-  (make-local-variable 'stumpbuffer-window-filters)
+  (make-local-variable 'stumpbuffer-quick-filter-stack)
   (make-local-variable 'stumpbuffer-show-frames-p)
   (make-local-variable 'stumpbuffer-filter-groups)
   (make-local-variable 'sb--active-filter-group-n)
