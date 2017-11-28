@@ -61,6 +61,9 @@
   | ~/ h~     | Push a quick filter to hide hidden groups                                               |
   | ~/ H~     | Push a quick filter to only show hidden groups                                          |
   | ~/ r~     | Push a quick filter to only show windows with a title matching a regex                  |
+  | ~/ c~     | Push a quick filter to only show windows with a specific class                          |
+  | ~/ R~     | Push a quick filter to only show windows with a specific role                           |
+  | ~/ i~     | Push a quick filter to only show windows with a specific instance                       |
   | ~\~       | Pop the quick filter stack. Positive numeric argument pops multiple, negative pops all. |
   
   The customization option ~stumpbuffer-quit-window-after-command~
@@ -152,6 +155,8 @@
         window plist returns true.
    - ~(:where field :matches regex)~ :: Matches if ~field~ in the
         group or window plist matches the regular expression ~regex~.
+   - ~(:where field :is value)~ :: Matches if ~field~ in the group or
+        window plist is ~equal~ to ~value~.
 
    For example (the default value),
 

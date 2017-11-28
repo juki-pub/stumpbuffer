@@ -153,6 +153,9 @@ Only set to T if your Stumpwm supports that."
     (define-key map (kbd "/ h") 'stumpbuffer-push-hide-hidden-groups-filter)
     (define-key map (kbd "/ H") 'stumpbuffer-push-show-hidden-groups-filter)
     (define-key map (kbd "/ r") 'stumpbuffer-push-show-matching-windows-filter)
+    (define-key map (kbd "/ c") 'stumpbuffer-push-show-windows-by-class-filter)
+    (define-key map (kbd "/ R") 'stumpbuffer-push-show-windows-by-role-filter)
+    (define-key map (kbd "/ i") 'stumpbuffer-push-show-windows-by-instance-filter)
     map))
 
 (defvar stumpbuffer-mode-group-map
@@ -907,6 +910,33 @@ With a prefix argument this also focuses the window."
    `(:show-windows :where :title :matches ,regex))
   (stumpbuffer-update))
 
+(defun stumpbuffer-push-show-windows-by-class-filter (class)
+  (interactive (list (or (unless current-prefix-arg
+                           (cl-getf (sb--current-window-plist) :class))
+                         (completing-read "Class: "
+                                          (sb--get-all-window-values :class)))))
+  (stumpbuffer-push-quick-filter
+   `(:show-windows :where :class :is ,class))
+  (stumpbuffer-update))
+
+(defun stumpbuffer-push-show-windows-by-role-filter (role)
+  (interactive (list (or (unless current-prefix-arg
+                           (cl-getf (sb--current-window-plist) :role))
+                         (completing-read "Role: "
+                                          (sb--get-all-window-values :role)))))
+  (stumpbuffer-push-quick-filter
+   `(:show-windows :where :role :is ,role))
+  (stumpbuffer-update))
+
+(defun stumpbuffer-push-show-windows-by-instance-filter (instance)
+  (interactive (list (or (unless current-prefix-arg
+                           (cl-getf (sb--current-window-plist) :instance))
+                         (completing-read "Instance: "
+                                          (sb--get-all-window-values :instance)))))
+  (stumpbuffer-push-quick-filter
+   `(:show-windows :where :instance :is ,instance))
+  (stumpbuffer-update))
+
 
 ;;; Retrieving data and updating
 
@@ -937,7 +967,9 @@ With a prefix argument this also focuses the window."
     (`(:where ,field :matches ,regex)
      (when-let ((val (cl-getf plist field)))
        (and (stringp val)
-            (string-match regex val))))))
+            (string-match regex val))))
+    (`(:where ,field :is ,value)
+     (equal value (cl-getf plist field)))))
 
 (defun sb--filter-window-p (window)
   (cl-flet ((match-filter (filter)
@@ -1143,7 +1175,6 @@ can be used to open a buffer from outside emacs."
   (hl-line-mode)
   (setq truncate-lines t)
   (set (make-local-variable 'sb--kill-frame-on-exit-p) nil)
-  (setq lexical-binding t)
   (make-local-variable 'stumpbuffer-quick-filter-stack)
   (make-local-variable 'stumpbuffer-show-frames-p)
   (make-local-variable 'stumpbuffer-filter-groups)
