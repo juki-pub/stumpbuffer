@@ -189,7 +189,8 @@
    with ~\~.
 
    For example, to quickly filter down to windows whose title contains
-   the "emacs", use ~/ r emacs RET~. Use ~\~ will remove the filter.
+   the word "emacs", use ~/ r emacs RET~. Using ~\~ will remove the
+   filter.
    
 * Extending
 
@@ -440,8 +441,7 @@
             (let ((mark (cl-getf win :mark)))
               (when (char-equal mark ?*)
                 (setq marksp t)
-                (try-add-tag win)
-                (stumpbuffer-change-window-mark win nil))))
+                (try-add-tag win))))
           (unless marksp
             (when-let ((win (stumpbuffer-on-window)))
               (try-add-tag win)))
@@ -463,8 +463,7 @@
             (let ((mark (cl-getf win :mark)))
               (when (char-equal mark ?*)
                 (setq marksp t)
-                (try-remove-tag win)
-                (stumpbuffer-change-window-mark win nil))))
+                (try-remove-tag win))))
           (unless marksp
             (when-let ((win (stumpbuffer-on-window)))
               (try-remove-tag win)))
@@ -477,3 +476,27 @@
       'my-stumpbuffer-remove-tag)
   #+END_EXAMPLE
   
+  Finally we should implement quick filtering based on tag
+  queries. This adds filter syntax for ~(:with-tags parsed-query)~ and
+  binds ~/ t~ to push such quick filter.
+
+  #+BEGIN_EXAMPLE
+    (defun my-stumpbuffer-tag-filter-handler (how plist)
+      (pcase how
+        (`(:with-tags ,query)
+         (when-let ((tags (cl-getf plist :tags)))
+           (my-stumpbuffer-match-tags tags query)))))
+
+    (add-to-list 'stumpbuffer-filter-handlers
+                 'my-stumpbuffer-tag-filter-handler)
+
+    (defun my-stumpbuffer-push-tag-filter (query)
+      (interactive (list (read-string "Query: ")))
+      (let ((query (my-stumpbuffer-parse-query query)))
+        (stumpbuffer-push-quick-filter
+         `(:show-windows :with-tags ,query))
+        (stumpbuffer-update)))
+
+    (define-key stumpbuffer-mode-map (kbd "/ t")
+      'my-stumpbuffer-push-tag-filter)
+  #+END_EXAMPLE
