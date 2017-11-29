@@ -265,6 +265,8 @@ respectively."
                     :hiddenp (window-hidden-p window)
                     :visiblep (window-visible-p window)
                     :fullscreenp (window-fullscreen window)
+                    :transientp (window-transient-p window)
+                    :modalp (window-modal-p window)
                     :type (if (typep window 'tile-window)
                               :tile
                               :float)

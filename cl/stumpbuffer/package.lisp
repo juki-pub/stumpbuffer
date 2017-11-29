@@ -41,6 +41,8 @@
                 #:window-name
                 #:float-window
                 #:tile-window
+                #:window-transient-p
+                #:window-modal-p
                 )
   
   (:export #:*window-data-fields*
