@@ -1,3 +1,4 @@
+;; -*- mode: emacs-lisp; lexical-binding: t; -*-
 ;;; stumpbuffer.el --- A buffer to control Stumpwm
 
 ;; Copyright (C) 2017 juki
@@ -124,6 +125,8 @@ Only set to T if your Stumpwm supports that."
      (:show-groups :satisfying stumpbuffer-group-hidden-p))))
 
 (defvar stumpbuffer-quick-filter-stack nil)
+
+(defvar stumpbuffer-filter-handlers nil)
 
 (defvar stumpbuffer-mode-map
   (let ((map (make-keymap)))
@@ -606,6 +609,7 @@ is short for
 (defun stumpbuffer-mark-current-group (mark)
   (interactive (list (sb--maybe-prompt-for-mark ?*)))
   (stumpbuffer-do-group-windows (win)
+    (ignore win)
     (stumpbuffer-mark mark)))
 
 (defun stumpbuffer-change-marks (mark)
@@ -961,6 +965,7 @@ With a prefix argument this also focuses the window."
                     (cl-destructuring-bind (field &optional width
                                                   title format-fn)
                         field
+                      (ignore format-fn)
                       (let* ((title (or title (symbol-name field)))
                              (len (length title))
                              (width (or width len)))
@@ -972,15 +977,32 @@ With a prefix argument this also focuses the window."
                                                 (min (length ,header)
                                                      (window-hscroll)))))))
 
-(defun sb--match-filter (how plist)
+(defun sb--satisfying-filter-handler (how plist)
+  (when (eql (cl-first how) :satisfying)
+    (funcall (cl-second how) plist)))
+(add-to-list 'stumpbuffer-filter-handlers
+             'sb--satisfying-filter-handler)
+
+(defun sb--where-matches-filter-handler (how plist)
   (pcase how
-    (`(:satisfying ,fn) (funcall fn plist))
     (`(:where ,field :matches ,regex)
      (when-let ((val (cl-getf plist field)))
        (and (stringp val)
-            (string-match regex val))))
+            (string-match regex val))))))
+(add-to-list 'stumpbuffer-filter-handlers
+             'sb--where-matches-filter-handler)
+
+(defun sb--where-is-filter-handler (how plist)
+  (pcase how
     (`(:where ,field :is ,value)
      (equal value (cl-getf plist field)))))
+(add-to-list 'stumpbuffer-filter-handlers
+             'sb--where-is-filter-handler)
+
+(defun sb--match-filter (how plist)
+  (cl-some (lambda (handler)
+             (funcall handler how plist))
+           stumpbuffer-filter-handlers))
 
 (defun sb--filter-window-p (window)
   (cl-flet ((match-filter (filter)
@@ -1023,6 +1045,7 @@ With a prefix argument this also focuses the window."
       (dolist (field stumpbuffer-window-format)
         (cl-destructuring-bind (field &optional width title format-fn)
             field
+          (ignore title)
           (let* ((entry (format "%s"
                                 (if-let ((value (cl-getf window-plist field)))
                                     (if (null format-fn)
@@ -1094,6 +1117,7 @@ With a prefix argument this also focuses the window."
   (unless (sb--filter-group-p group-plist)
     (cl-destructuring-bind (&key number name frames windows type &allow-other-keys)
         group-plist
+      (ignore name type)
       (sb--with-properties
           (list 'keymap                    stumpbuffer-mode-group-map
                 'stumpbuffer-group-number  number
@@ -1142,6 +1166,7 @@ With a prefix argument this also focuses the window."
                  (when position (goto-char position)))))
          (t (goto-char (point-min))
             (dotimes (i position)
+              (ignore i)
               (stumpbuffer-forward-line 1))))))))
 
 
