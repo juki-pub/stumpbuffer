@@ -265,6 +265,28 @@
     All of these have a corresponding macro
     ~stumpbuffer-do-<something>~.
    
+*** Filters
+
+    The filter syntax can be extended by adding a function to the list
+    ~stumpbuffer-filter-handlers~. The function should take two
+    arguments:
+
+    1. A filter query (such as ~(:where foo :is bar)~).
+    2. A group or window plist as retrieved from Stumpwm.
+
+    The function should return true if the group or window should be
+    filtered. For example, the ~(:where _ :is _)~ filter is defined as
+
+    #+BEGIN_EXAMPLE
+      (defun sb--where-is-filter-handler (how plist)
+        (pcase how
+          (`(:where ,field :is ,value)
+           (equal value (cl-getf plist field)))))
+
+      (add-to-list 'stumpbuffer-filter-handlers
+                   'sb--where-is-filter-handler)
+    #+END_EXAMPLE
+
 *** Communicating with Stumpwm
 
     Communication happens through stumpish. ~stumpbuffer-command~ can
