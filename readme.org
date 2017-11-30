@@ -45,7 +45,7 @@
   | ~k~       | Mark for kill (forces window to die; you should usually use delete instead)             |
   | ~*~       | Change all ~*~ marks to a different character                                           |
   | ~x~       | Execute marks                                                                           |
-  | ~D~       | Delete                                                                                  |
+  | ~D~       | Delete window, frame or group                                                           |
   | ~K~       | Kill window (force it to die)                                                           |
   | ~N~       | Rename                                                                                  |
   | ~P~       | Pull (move marked windows here)                                                         |
@@ -112,8 +112,11 @@
 ** Faces
 
    Window names can be highlighted with custom faces. The variable
-   ~stumpbuffer-window-faces~ is an alist of ~(fn . face)~ pairs. The
-   ~face~ will be used for windows where ~fn~ return true.
+   ~stumpbuffer-window-faces~ is an alist of ~(filter . face)~
+   pairs. The ~face~ will be used for windows that match ~filter~.
+
+   The filter can be either a function or a filter like described
+   below.
 
    For example, the default value
 
@@ -128,11 +131,8 @@
    put
 
    #+BEGIN_EXAMPLE
-     (defun my-stumpbuffer-emacs-p (window)
-       (string-equal (getf window :class) "Emacs"))
-
      (add-to-list 'stumpbuffer-window-faces
-                  '(my-stumpbuffer-emacs-p . font-lock-string-face))
+                  '((:where :class :is "Emacs") . font-lock-string-face))
    #+END_EXAMPLE
 
    in you Emacs init-file. Notice that all matching faces will be

@@ -243,6 +243,35 @@ signalled with the message."
               (error "StumpBuffer error: %s" (cl-second result))
             result))))))
 
+;;; Filters
+
+(defun sb--satisfying-filter-handler (how plist)
+  (when (eql (cl-first how) :satisfying)
+    (funcall (cl-second how) plist)))
+(add-to-list 'stumpbuffer-filter-handlers
+             'sb--satisfying-filter-handler)
+
+(defun sb--where-matches-filter-handler (how plist)
+  (pcase how
+    (`(:where ,field :matches ,regex)
+     (when-let ((val (cl-getf plist field)))
+       (and (stringp val)
+            (string-match regex val))))))
+(add-to-list 'stumpbuffer-filter-handlers
+             'sb--where-matches-filter-handler)
+
+(defun sb--where-is-filter-handler (how plist)
+  (pcase how
+    (`(:where ,field :is ,value)
+     (equal value (cl-getf plist field)))))
+(add-to-list 'stumpbuffer-filter-handlers
+             'sb--where-is-filter-handler)
+
+(defun sb--match-filter (how plist)
+  (cl-some (lambda (handler)
+             (funcall handler how plist))
+           stumpbuffer-filter-handlers))
+
 
 ;;; Retrieving info about things
 
@@ -288,8 +317,10 @@ signalled with the message."
   "Get the appropriate face for window."
   (let ((faces '()))
     (dolist (pair stumpbuffer-window-faces faces)
-      (cl-destructuring-bind (fn . face) pair
-        (when (funcall fn window)
+      (cl-destructuring-bind (filter . face) pair
+        (when (if (listp filter)
+                  (sb--match-filter filter window)
+                (funcall filter window))
           (push face faces))))))
 
 
@@ -976,33 +1007,6 @@ With a prefix argument this also focuses the window."
     (setq header-line-format `(:eval (substring ,header
                                                 (min (length ,header)
                                                      (window-hscroll)))))))
-
-(defun sb--satisfying-filter-handler (how plist)
-  (when (eql (cl-first how) :satisfying)
-    (funcall (cl-second how) plist)))
-(add-to-list 'stumpbuffer-filter-handlers
-             'sb--satisfying-filter-handler)
-
-(defun sb--where-matches-filter-handler (how plist)
-  (pcase how
-    (`(:where ,field :matches ,regex)
-     (when-let ((val (cl-getf plist field)))
-       (and (stringp val)
-            (string-match regex val))))))
-(add-to-list 'stumpbuffer-filter-handlers
-             'sb--where-matches-filter-handler)
-
-(defun sb--where-is-filter-handler (how plist)
-  (pcase how
-    (`(:where ,field :is ,value)
-     (equal value (cl-getf plist field)))))
-(add-to-list 'stumpbuffer-filter-handlers
-             'sb--where-is-filter-handler)
-
-(defun sb--match-filter (how plist)
-  (cl-some (lambda (handler)
-             (funcall handler how plist))
-           stumpbuffer-filter-handlers))
 
 (defun sb--filter-window-p (window)
   (cl-flet ((match-filter (filter)
