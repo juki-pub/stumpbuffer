@@ -215,7 +215,18 @@ Only set to T if your Stumpwm supports that."
   (cl-typecase arg
     (string (if (and stumpbuffer-stumpish-quote-arguments-with-spaces-p
                      (cl-position ?\s arg))
-                (format "\"%s\"" (replace-regexp-in-string "\"" "\\\\\"" arg))
+                (format "\"%s\"" (replace-regexp-in-string
+                                  "\"" "\\\\\""
+                                  (replace-regexp-in-string
+                                   "\\\\"
+                                   ;; Escape backslashes by adding
+                                   ;; another backslash in front of
+                                   ;; it. We need 16 backslashes to
+                                   ;; eachive this, because half of
+                                   ;; them get eaten along the way,
+                                   ;; three times.
+                                   "\\\\\\\\\\\\\\\\"
+                                   arg)))
               arg))
     (number (number-to-string arg))))
 
