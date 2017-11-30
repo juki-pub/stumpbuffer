@@ -278,7 +278,7 @@ signalled with the message."
 (add-to-list 'stumpbuffer-filter-handlers
              'sb--where-is-filter-handler)
 
-(defun sb--match-filter (how plist)
+(defun stumpbuffer-match-filter (how plist)
   (cl-some (lambda (handler)
              (funcall handler how plist))
            stumpbuffer-filter-handlers))
@@ -330,7 +330,7 @@ signalled with the message."
     (dolist (pair stumpbuffer-window-faces faces)
       (cl-destructuring-bind (filter . face) pair
         (when (if (listp filter)
-                  (sb--match-filter filter window)
+                  (stumpbuffer-match-filter filter window)
                 (funcall filter window))
           (push face faces))))))
 
@@ -1023,8 +1023,8 @@ With a prefix argument this also focuses the window."
   (cl-flet ((match-filter (filter)
                           (cl-destructuring-bind (what &rest how) filter
                             (cl-case what
-                              (:hide-windows (sb--match-filter how window))
-                              (:show-windows (not (sb--match-filter how window)))))))
+                              (:hide-windows (stumpbuffer-match-filter how window))
+                              (:show-windows (not (stumpbuffer-match-filter how window)))))))
     (or (cl-some #'match-filter
                  (if (stringp (car sb--active-filter-group))
                      (cl-rest sb--active-filter-group)
@@ -1119,8 +1119,8 @@ With a prefix argument this also focuses the window."
   (cl-flet ((match-filter (filter)
                           (cl-destructuring-bind (what &rest how) filter
                             (cl-case what
-                              (:hide-groups (sb--match-filter how group))
-                              (:show-groups (not (sb--match-filter how group)))))))
+                              (:hide-groups (stumpbuffer-match-filter how group))
+                              (:show-groups (not (stumpbuffer-match-filter how group)))))))
     (or (cl-some #'match-filter
                  (if (stringp (car sb--active-filter-group))
                      (cl-rest sb--active-filter-group)
