@@ -77,5 +77,6 @@
            #:stumpbuffer-delete-group
            #:stumpbuffer-dump-group
            #:stumpbuffer-hide-window
+           #:stumpbuffer-renumber-frame
            ))
 

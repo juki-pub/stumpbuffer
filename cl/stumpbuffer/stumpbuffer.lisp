@@ -240,6 +240,20 @@ respectively."
           (setf (group-number old-group) group-num
                 (group-number group) new-number)))))
 
+(defcommand stumpbuffer-renumber-frame (group-num frame-num new-number)
+    ((:number "Group number: ")
+     (:number "Frame number: ")
+     (:number "New frame number: "))
+  (with-simple-error-handling
+    (let* ((group (find-group-by-number group-num))
+           (frame (find-frame-by-group-and-number group frame-num))
+           (old (ignore-errors
+                 (find-frame-by-group-and-number group new-number))))
+      (if (null old)
+          (setf (frame-number frame) new-number)
+          (setf (frame-number old) frame-num
+                (frame-number frame) new-number)))))
+
 (defvar *window-data-fields* nil)
 (defvar *group-data-fields* nil)
 (defvar *frame-data-fields* nil)

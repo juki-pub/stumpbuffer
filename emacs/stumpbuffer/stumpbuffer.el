@@ -185,6 +185,7 @@ Only set to T if your Stumpwm supports that."
     (define-key map (kbd "s") 'stumpbuffer-split-frame-vertical)
     (define-key map (kbd "S") 'stumpbuffer-split-frame-horizontal)
     (define-key map (kbd "RET") 'stumpbuffer-focus-frame)
+    (define-key map (kbd "r") 'stumpbuffer-renumber-frame)
     map))
 
 (defvar stumpbuffer-mode-window-map
@@ -817,6 +818,17 @@ is short for
   (when (and group new-number)
     (unwind-protect
         (stumpbuffer-command "renumber-group" group new-number)
+      (stumpbuffer-update))))
+
+(defun stumpbuffer-renumber-frame (group frame-num new-number)
+  (interactive (let ((fplist (sb--current-frame-plist)))
+                 (list (cl-getf (stumpbuffer-on-frame-name) :group)
+                       (cl-getf fplist :number)
+                       (read-string (format "Renumber frame %d to: "
+                                            (cl-getf fplist :number))))))
+  (when (and group frame-num new-number)
+    (unwind-protect
+        (stumpbuffer-command "renumber-frame" group frame-num new-number)
       (stumpbuffer-update))))
 
 (defun stumpbuffer-switch-to-group (group)
