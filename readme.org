@@ -157,6 +157,11 @@
         group or window plist matches the regular expression ~regex~.
    - ~(:where field :is value)~ :: Matches if ~field~ in the group or
         window plist is ~equal~ to ~value~.
+   - ~(:or filter1 ... filtern)~ :: Matches if one of the filters
+        match.
+   - ~(:and filter1 ... filtern)~ :: Matches if all of the filters
+        match.
+   - ~(:not filter)~ :: Matches if ~filter~ doesn't match.
 
    For example (the default value),
 

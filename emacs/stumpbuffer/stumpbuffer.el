@@ -278,6 +278,28 @@ signalled with the message."
 (add-to-list 'stumpbuffer-filter-handlers
              'sb--where-is-filter-handler)
 
+(defun sb--or-filter-handler (how plist)
+  (when (eql (cl-first how) :or)
+    (cl-some (lambda (filter)
+               (stumpbuffer-match-filter filter plist))
+             (cl-rest how))))
+(add-to-list 'stumpbuffer-filter-handlers
+             'sb--or-filter-handler)
+
+(defun sb--and-filter-handler (how plist)
+  (when (eql (cl-first how) :and)
+    (cl-every (lambda (filter)
+                (stumpbuffer-match-filter filter plist))
+              (cl-rest how))))
+(add-to-list 'stumpbuffer-filter-handlers
+             'sb--and-filter-handler)
+
+(defun sb--not-filter-handler (how plist)
+  (when (eql (cl-first how) :not)
+    (not (stumpbuffer-match-filter (cl-second how) plist))))
+(add-to-list 'stumpbuffer-filter-handlers
+             'sb--not-filter-handler)
+
 (defun stumpbuffer-match-filter (how plist)
   (cl-some (lambda (handler)
              (funcall handler how plist))
