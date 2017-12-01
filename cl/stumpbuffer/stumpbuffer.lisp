@@ -258,9 +258,13 @@ respectively."
 (defvar *group-data-fields* nil)
 (defvar *frame-data-fields* nil)
 
-(defcommand stumpbuffer-get-data () ()
+(defcommand stumpbuffer-get-data (orderedp) ((:y-or-n "Ordered: "))
   "Retrieve information about groups and windows for StumpBuffer."
   (labels ((number (plist) (getf plist :number))
+           (maybe-sort (list)
+             (if orderedp
+                 (sort list #'< :key #'number)
+                 list))
            (process-custom-fields (alist &rest args)
              (mappend (lambda (field)
                         (destructuring-bind (key . fn) field
@@ -289,9 +293,8 @@ respectively."
              (list* :number (frame-number frame)
                     :width (frame-width frame)
                     :height (frame-height frame)
-                    :windows (sort
-                              (mapcar #'window-plist (frame-windows group frame))
-                              #'< :key #'number)
+                    :windows (maybe-sort (mapcar #'window-plist
+                                                 (frame-windows group frame)))
                     (process-custom-fields *frame-data-fields* group frame)))
            (group-plist (group)
              (let ((type (if (typep group 'float-group)
@@ -301,21 +304,18 @@ respectively."
                       :name (group-name group)
                       :type type
                       :frames (if (eql type :tile)
-                                  (sort (mapcar (lambda (frame)
-                                                  (frame-plist group frame))
-                                                (group-frames group))
-                                        #'< :key #'number))
-                      :windows (sort (mapcar #'window-plist
-                                             (remove-if-not
-                                              (lambda (window)
-                                                (typep window 'float-window))
-                                              (group-windows group)))
-                                     #'< :key #'number)
+                                  (maybe-sort (mapcar (lambda (frame)
+                                                        (frame-plist group frame))
+                                                      (group-frames group))))
+                      :windows (maybe-sort (mapcar #'window-plist
+                                                   (remove-if-not
+                                                    (lambda (window)
+                                                      (typep window 'float-window))
+                                                    (group-windows group))))
                       :hiddenp (char= (char (group-name group) 0)
                                       #\.)
                       (process-custom-fields *group-data-fields* group)))))
     (with-simple-error-handling
       (let ((*print-case* :downcase))
         (message "~s" (let ((groups (screen-groups (current-screen))))
-                        (sort (mapcar #'group-plist groups)
-                              #'< :key #'number)))))))
+                        (maybe-sort (mapcar #'group-plist groups))))))))

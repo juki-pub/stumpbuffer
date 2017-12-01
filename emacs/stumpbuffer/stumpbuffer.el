@@ -84,6 +84,11 @@ Only set to T if your Stumpwm supports that."
   :type 'boolean
   :group 'stumpbuffer)
 
+(defcustom stumpbuffer-data-ordered-p t
+  "Should the data be sorted by number?"
+  :type 'boolean
+  :group 'stumpbuffer)
+
 (defvar sb--kill-frame-on-exit-p nil)
 
 (defvar stumpbuffer-window-format '((:number 3 "N")
@@ -1036,7 +1041,9 @@ With a prefix argument this also focuses the window."
 ;;; Retrieving data and updating
 
 (defun sb--get-data ()
-  (stumpbuffer-command "get-data"))
+  (stumpbuffer-command "get-data"
+                       (if stumpbuffer-data-ordered-p
+                           "y" "n")))
 
 (defun sb--set-header ()
   (let ((header (with-output-to-string

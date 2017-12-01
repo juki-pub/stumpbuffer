@@ -72,6 +72,11 @@
   window). ~stumpbuffer-show-frames-p~ can be set to ~nil~ to hide
   frames from the list.
 
+  By default everything will be sorted by number. Set
+  ~stumpbuffer-data-ordered-p~ to ~nil~ if you prefer to get it in
+  whatever order Stumpwm uses (which should be by recency, but that's
+  an implementation detail).
+
 ** Window row format
   
   The variable ~stumpbuffer-window-format~ determines which fields to
