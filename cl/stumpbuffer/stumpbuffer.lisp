@@ -70,13 +70,13 @@
       (gselect g)
       (focus-frame g (find-frame-by-group-and-number g frame-num)))))
 
-(defcommand stumpbuffer-focus-window (group-num window-id)
-    ((:number "Group number: ")
-     (:number "Window ID: "))
+(defcommand stumpbuffer-focus-window (window-id)
+    ((:number "Window ID: "))
   (with-simple-error-handling
-    (let ((g (find-group-by-number group-num)))
+    (let* ((win (find-window-by-id window-id))
+           (g (window-group win)))
       (gselect g)
-      (group-focus-window g (find-window-by-id window-id)))))
+      (group-focus-window g win))))
 
 (defcommand stumpbuffer-pull-window (window-id)
     ((:number "Window ID: "))

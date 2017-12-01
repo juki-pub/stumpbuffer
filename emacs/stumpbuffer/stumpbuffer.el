@@ -847,12 +847,10 @@ is short for
     (when stumpbuffer-quit-window-after-command
       (stumpbuffer-quit-window))))
 
-(defun stumpbuffer-focus-window (group window)
-  (interactive (let ((win (stumpbuffer-on-window)))
-                 (list (cl-getf win :group)
-                       (cl-getf (cl-getf win :window-plist) :id))))
-  (when (and group window)
-    (stumpbuffer-command "focus-window" group window)
+(defun stumpbuffer-focus-window (window)
+  (interactive (list (cl-getf (sb--current-window-plist) :id)))
+  (when window
+    (stumpbuffer-command "focus-window" window)
     (when stumpbuffer-quit-window-after-command
       (stumpbuffer-quit-window))))
 
@@ -886,15 +884,18 @@ marked windows, the window at point will be pulled."
 With a prefix argument this also switches to the group."
   (interactive (list (cl-getf (sb--current-group-plist) :number)
                      current-prefix-arg))
-  (unwind-protect
-      (stumpbuffer-do-marked-windows (win)
-        (when (char-equal ?* (cl-getf win :mark))
-          (stumpbuffer-command "throw-window-to-group"
-                               (cl-getf (cl-getf win :window-plist) :id)
-                               group-number)))
-    (stumpbuffer-update))
-  (when followp
-    (stumpbuffer-switch-to-group group-number)))
+  (let (target-window)
+    (unwind-protect
+        (stumpbuffer-do-marked-windows (win)
+          (when (null target-window)
+            (setq target-window (cl-getf win :window-plist)))
+          (when (char-equal ?* (cl-getf win :mark))
+            (stumpbuffer-command "throw-window-to-group"
+                                 (cl-getf (cl-getf win :window-plist) :id)
+                                 group-number)))
+      (stumpbuffer-update))
+    (when (and target-window followp)
+      (stumpbuffer-focus-window (cl-getf target-window :id)))))
 
 (defun stumpbuffer-throw-marked-windows-to-frame (group frame &optional followp)
   "Move all `*` marked windows to a frame.
@@ -904,18 +905,21 @@ With a prefix argument this also focuses the frame."
                  (list (cl-getf frame :group)
                        (cl-getf (cl-getf frame :frame-plist) :number)
                        current-prefix-arg)))
-  (when-let ((target-group group)
-             (target-frame frame))
-    (unwind-protect
-        (stumpbuffer-do-marked-windows (win)
-          (when (char-equal ?* (cl-getf win :mark))
-            (stumpbuffer-command "throw-window-to-frame"
-                                 (cl-getf (cl-getf win :window-plist) :id)
-                                 target-group
-                                 target-frame)))
-      (stumpbuffer-update)))
-  (when followp
-    (stumpbuffer-focus-frame group frame)))
+  (let (target-window)
+    (when-let ((target-group group)
+               (target-frame frame))
+      (unwind-protect
+          (stumpbuffer-do-marked-windows (win)
+            (when (null target-window)
+              (setq target-window (cl-getf win :window-plist)))
+            (when (char-equal ?* (cl-getf win :mark))
+              (stumpbuffer-command "throw-window-to-frame"
+                                   (cl-getf (cl-getf win :window-plist) :id)
+                                   target-group
+                                   target-frame)))
+        (stumpbuffer-update)))
+    (when (and target-window followp)
+      (stumpbuffer-focus-window (cl-getf target-window :id)))))
 
 (defun stumpbuffer-throw-marked-windows (target-window-id &optional followp)
   "Move all `*` marked windows to a window.
@@ -923,17 +927,18 @@ With a prefix argument this also focuses the frame."
 With a prefix argument this also focuses the window."
   (interactive (list (cl-getf (sb--current-window-plist) :id)
                      current-prefix-arg))
-  (unwind-protect
-      (stumpbuffer-do-marked-windows (win)
-        (when (char-equal ?* (cl-getf win :mark))
-          (stumpbuffer-command "throw-window"
-                               (cl-getf (cl-getf win :window-plist) :id)
-                               target-window-id)))
-    (stumpbuffer-update))
-  (when followp
-    (let ((twindow (stumpbuffer-on-window)))
-      (stumpbuffer-focus-window (cl-getf twindow :group)
-                                target-window-id))))
+  (let (target-window)
+    (unwind-protect
+        (stumpbuffer-do-marked-windows (win)
+          (when (null target-window)
+            (setq target-window (cl-getf win :window-plist)))
+          (when (char-equal ?* (cl-getf win :mark))
+            (stumpbuffer-command "throw-window"
+                                 (cl-getf (cl-getf win :window-plist) :id)
+                                 target-window-id)))
+      (stumpbuffer-update))
+    (when (and target-window followp)
+      (stumpbuffer-focus-window (cl-getf target-window :id)))))
 
 (defun stumpbuffer-toggle-frame-showing ()
   (interactive)
