@@ -210,21 +210,24 @@ Only set to T if your Stumpwm supports that."
 
 (defun sb--process-arg (arg)
   (cl-typecase arg
-    (string (if (and stumpbuffer-stumpish-quote-arguments-with-spaces-p
-                     (cl-position ?\s arg))
-                (format "\"%s\"" (replace-regexp-in-string
-                                  "\"" "\\\\\""
-                                  (replace-regexp-in-string
-                                   "\\\\"
-                                   ;; Escape backslashes by adding
-                                   ;; another backslash in front of
-                                   ;; it. We need 16 backslashes to
-                                   ;; eachive this, because half of
-                                   ;; them get eaten along the way,
-                                   ;; three times.
-                                   "\\\\\\\\\\\\\\\\"
-                                   arg)))
-              arg))
+    (string (cond
+             ((not stumpbuffer-stumpish-quote-arguments-with-spaces-p)
+              arg)
+             ((zerop (length arg)) "\"\"")
+             ((cl-position ?\s arg)
+              (format "\"%s\"" (replace-regexp-in-string
+                                "\"" "\\\\\""
+                                (replace-regexp-in-string
+                                 "\\\\"
+                                 ;; Escape backslashes by adding
+                                 ;; another backslash in front of
+                                 ;; it. We need 16 backslashes to
+                                 ;; eachive this, because half of
+                                 ;; them get eaten along the way,
+                                 ;; three times.
+                                 "\\\\\\\\\\\\\\\\"
+                                 arg))))
+             (t arg)))
     (number (number-to-string arg))))
 
 (defun stumpbuffer-command (command &rest args)
