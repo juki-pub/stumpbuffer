@@ -108,11 +108,7 @@ Only set to T if your Stumpwm supports that."
     (warning (:call (lambda (plist)
                       (when (eql (cl-getf plist :type) :float)
                         " Float"))))
-    (font-lock-keyword-face " ]")
-    ;; (warning (:call (lambda (plist)
-    ;;                   (when (eql (cl-getf plist :type) :float)
-    ;;                     " Float groups don't work yet!"))))
-    ))
+    (font-lock-keyword-face " ]")))
 
 (defvar sb--active-filter-group nil)
 (defvar sb--active-filter-group-n 0)
