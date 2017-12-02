@@ -89,6 +89,11 @@ Only set to T if your Stumpwm supports that."
   :type 'boolean
   :group 'stumpbuffer)
 
+(defcustom stumpbuffer-persistent-quick-filters-p nil
+  "Should the quick filter stack persist across buffers?"
+  :type 'boolean
+  :group 'stumpbuffer)
+
 (defvar sb--kill-frame-on-exit-p nil)
 
 (defvar stumpbuffer-window-format '((:number 3 "N")
@@ -1271,7 +1276,8 @@ can be used to open a buffer from outside emacs."
   (hl-line-mode)
   (setq truncate-lines t)
   (set (make-local-variable 'sb--kill-frame-on-exit-p) nil)
-  (make-local-variable 'stumpbuffer-quick-filter-stack)
+  (unless stumpbuffer-persistent-quick-filters-p
+    (make-local-variable 'stumpbuffer-quick-filter-stack))
   (make-local-variable 'stumpbuffer-show-frames-p)
   (make-local-variable 'stumpbuffer-filter-groups)
   (make-local-variable 'sb--active-filter-group-n)
