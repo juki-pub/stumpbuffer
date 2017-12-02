@@ -1222,6 +1222,7 @@ With a prefix argument this also focuses the window."
                     mark)
               active-marks)))
     (let ((window-id (cl-getf (sb--current-window-plist) :id))
+          (group-num (cl-getf (sb--current-group-plist) :number))
           (position (count-lines (point-min) (point))))
       (unwind-protect
           (progn (setq buffer-read-only nil)
@@ -1240,6 +1241,15 @@ With a prefix argument this also focuses the window."
                  (cl-block nil
                    (stumpbuffer-do-windows (win)
                      (when (= window-id (cl-getf (cl-getf win :window-plist) :id))
+                       (setq position (point))
+                       (cl-return))))
+                 (when position (goto-char position)))))
+         ((and group-num
+               (let (position)
+                 (cl-block nil
+                   (stumpbuffer-do-groups (group)
+                     (when (= group-num (cl-getf (cl-getf group :group-plist)
+                                                 :number))
                        (setq position (point))
                        (cl-return))))
                  (when position (goto-char position)))))
