@@ -267,6 +267,16 @@ respectively."
           (setf (frame-number old) frame-num
                 (frame-number frame) new-number)))))
 
+(defcommand stumpbuffer-only (group-num frame-num)
+    ((:number "Group number: ")
+     (:number "Frame number: "))
+  (with-simple-error-handling
+    (let* ((group (find-group-by-number group-num))
+           (frame (find-frame-by-group-and-number group frame-num)))
+      (dolist (f (group-frames group))
+        (unless (eq f frame)
+          (remove-split group f))))))
+
 (defvar *window-data-fields* nil)
 (defvar *group-data-fields* nil)
 (defvar *frame-data-fields* nil)

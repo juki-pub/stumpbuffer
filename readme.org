@@ -53,6 +53,7 @@
   | ~q~       | Quit                                                                                    |
   | ~s~       | Split frame vertically (only when point on frame name or window)                        |
   | ~S~       | Split frame horizontally (only when point on frame name or window)                      |
+  | ~Q~       | Make a frame the only frame in the group                                                |
   | ~C~       | Create new group (takes marked windows with it)                                         |
   | ~f~       | Toggle frame name display                                                               |
   | ~r~       | Renumber group or window                                                                |

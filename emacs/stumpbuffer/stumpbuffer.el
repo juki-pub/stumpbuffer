@@ -192,6 +192,7 @@ Only set to T if your Stumpwm supports that."
     (define-key map (kbd "S") 'stumpbuffer-split-frame-horizontal)
     (define-key map (kbd "RET") 'stumpbuffer-focus-frame)
     (define-key map (kbd "r") 'stumpbuffer-renumber-frame)
+    (define-key map (kbd "Q") 'stumpbuffer-only)
     map))
 
 (defvar stumpbuffer-mode-window-map
@@ -208,6 +209,7 @@ Only set to T if your Stumpwm supports that."
     (define-key map (kbd "s") 'stumpbuffer-split-window-frame-vertical)
     (define-key map (kbd "S") 'stumpbuffer-split-window-frame-horizontal)
     (define-key map (kbd "r") 'stumpbuffer-renumber-window)
+    (define-key map (kbd "Q") 'stumpbuffer-only)
     map))
 
 (defvar stumpbuffer-mark-functions
@@ -1041,6 +1043,18 @@ With a prefix argument this also focuses the window."
   (stumpbuffer-push-quick-filter
    `(:show-windows :where :instance :is ,instance))
   (stumpbuffer-update))
+
+(defun stumpbuffer-only (group frame)
+  (interactive (if-let (fplist (stumpbuffer-on-frame-name))
+                   (list (cl-getf fplist :group)
+                         (cl-getf (cl-getf fplist :frame-plist) :number))
+                 (when-let (wplist (stumpbuffer-on-window))
+                   (list (cl-getf wplist :group)
+                         (cl-getf wplist :frame)))))
+  (when (and group frame)
+    (unwind-protect
+        (stumpbuffer-command "only" group frame)
+      (stumpbuffer-update))))
 
 
 ;;; Retrieving data and updating
