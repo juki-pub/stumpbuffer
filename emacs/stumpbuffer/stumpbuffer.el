@@ -115,7 +115,8 @@ Only set to T if your Stumpwm supports that."
 
 (defvar stumpbuffer-window-faces
   '((stumpbuffer-window-visible-p . bold)
-    (stumpbuffer-window-hidden-p . shadow))
+    (stumpbuffer-window-hidden-p . shadow)
+    (stumpbuffer-window-transient-or-modal-p . font-lock-comment-face))
   "A list of (fn . face) pairs used to decide window face.")
 
 (defvar stumpbuffer-frame-name-format
@@ -1374,6 +1375,9 @@ can be used to open a buffer from outside emacs."
 (defun stumpbuffer-window-fullscreen-p (window)
   (cl-getf window :fullscreenp))
 
+(defun stumpbuffer-window-transient-or-modal-p (window)
+  (or (cl-getf window :transientp)
+      (cl-getf window :modalp)))
 
 (provide 'stumpbuffer)
 (run-hooks 'stumpbuffer-load-hook)
