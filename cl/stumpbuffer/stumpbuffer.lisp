@@ -277,6 +277,23 @@ respectively."
         (unless (eq f frame)
           (remove-split group f))))))
 
+(defcommand stumpbuffer-dump-group (group-num file)
+    ((:number "Group number: ")
+     (:string "File: "))
+  (with-simple-error-handling
+    (let ((group (find-group-by-number group-num)))
+      (ensure-directories-exist file)
+      (dump-to-file (dump-group group) file))))
+
+(defcommand stumpbuffer-restore-group (group-num file auto-populate)
+    ((:number "Group number: ")
+     (:string "File: ")
+     (:y-or-n "Auto populate: "))
+  (with-simple-error-handling
+    (let ((group (find-group-by-number group-num))
+          (dump (read-dump-from-file file)))
+      (restore-group group dump auto-populate))))
+
 (defvar *window-data-fields* nil)
 (defvar *group-data-fields* nil)
 (defvar *frame-data-fields* nil)

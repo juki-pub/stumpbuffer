@@ -56,6 +56,10 @@
                 #:tile-window
                 #:window-transient-p
                 #:window-modal-p
+                #:dump-to-file
+                #:dump-group
+                #:read-dump-from-file
+                #:restore-group
                 )
   
   (:export #:*window-data-fields*
@@ -92,5 +96,7 @@
            #:stumpbuffer-hide-window
            #:stumpbuffer-renumber-frame
            #:stumpbuffer-only
+           #:stumpbuffer-dump-group
+           #:stumpbuffer-restore-group
            ))
 

@@ -66,6 +66,8 @@
   | ~/ R~     | Push a quick filter to only show windows with a specific role                           |
   | ~/ i~     | Push a quick filter to only show windows with a specific instance                       |
   | ~\~       | Pop the quick filter stack. Positive numeric argument pops multiple, negative pops all. |
+  | ~<~       | Dump group to file                                                                      |
+  | ~>~       | Restore group from file                                                                 |
   
   The customization option ~stumpbuffer-quit-window-after-command~
   determines whether the buffer should be killed when executing

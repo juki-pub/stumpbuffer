@@ -94,6 +94,16 @@ Only set to T if your Stumpwm supports that."
   :type 'boolean
   :group 'stumpbuffer)
 
+(defcustom stumpbuffer-default-dump-directory "~/"
+  "The default directory to store dumps to."
+  :type 'directory
+  :group 'stumpbuffer)
+
+(defcustom stumpbuffer-auto-populate-restored-groups-p t
+  "Should restored groups be auto populated?"
+  :type 'boolean
+  :group 'stumpbuffer)
+
 (defvar sb--kill-frame-on-exit-p nil)
 
 (defvar stumpbuffer-window-format '((:number 3 "N")
@@ -178,6 +188,8 @@ Only set to T if your Stumpwm supports that."
     (define-key map (kbd "d") 'stumpbuffer-mark-group-for-delete)
     (define-key map (kbd "k") 'stumpbuffer-mark-group-for-kill)
     (define-key map (kbd "r") 'stumpbuffer-renumber-group)
+    (define-key map (kbd "<") 'stumpbuffer-dump-group)
+    (define-key map (kbd ">") 'stumpbuffer-restore-group)
     map))
 
 (defvar stumpbuffer-mode-frame-map
@@ -1054,6 +1066,25 @@ With a prefix argument this also focuses the window."
   (when (and group frame)
     (unwind-protect
         (stumpbuffer-command "only" group frame)
+      (stumpbuffer-update))))
+
+(defun stumpbuffer-dump-group (group file)
+  (interactive (list (cl-getf (sb--current-group-plist) :number)
+                     (read-file-name "Dump to file: "
+                                     stumpbuffer-default-dump-directory)))
+  (when (and group file)
+    (stumpbuffer-command "dump-group" group file)))
+
+(defun stumpbuffer-restore-group (group file auto-populate)
+  (interactive (list (cl-getf (sb--current-group-plist) :number)
+                     (read-file-name "Restore from: "
+                                     stumpbuffer-default-dump-directory
+                                     nil t)
+                     stumpbuffer-auto-populate-restored-groups-p))
+  (when (and group file)
+    (unwind-protect
+        (stumpbuffer-command "restore-group" group file
+                             (if auto-populate "y" "n"))
       (stumpbuffer-update))))
 
 
