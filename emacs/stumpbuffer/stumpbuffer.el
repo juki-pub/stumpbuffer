@@ -456,8 +456,6 @@ signalled with the message."
   "Move to the previous group name. Wraps around."
   (interactive "p")
   (when (> n 0)
-    (when (stumpbuffer-on-group-name)
-      (stumpbuffer-backward-line 1))
     (goto-char (previous-single-property-change (point)
                                                 'stumpbuffer-group-number
                                                 nil
