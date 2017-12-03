@@ -91,5 +91,6 @@
            #:stumpbuffer-dump-group
            #:stumpbuffer-hide-window
            #:stumpbuffer-renumber-frame
+           #:stumpbuffer-only
            ))
 
