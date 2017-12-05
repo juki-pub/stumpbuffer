@@ -99,11 +99,6 @@ Only set to T if your Stumpwm supports that."
   :type 'directory
   :group 'stumpbuffer)
 
-(defcustom stumpbuffer-auto-populate-restored-groups-p t
-  "Should restored groups be auto populated?"
-  :type 'boolean
-  :group 'stumpbuffer)
-
 (defvar sb--kill-frame-on-exit-p nil)
 
 (defvar stumpbuffer-window-format '((:number 3 "N")
@@ -1074,16 +1069,14 @@ With a prefix argument this also focuses the window."
   (when (and group file)
     (stumpbuffer-command "dump-group" group file)))
 
-(defun stumpbuffer-restore-group (group file auto-populate)
+(defun stumpbuffer-restore-group (group file)
   (interactive (list (cl-getf (sb--current-group-plist) :number)
                      (read-file-name "Restore from: "
                                      stumpbuffer-default-dump-directory
-                                     nil t)
-                     stumpbuffer-auto-populate-restored-groups-p))
+                                     nil t)))
   (when (and group file)
     (unwind-protect
-        (stumpbuffer-command "restore-group" group file
-                             (if auto-populate "y" "n"))
+        (stumpbuffer-command "restore-group" group file)
       (stumpbuffer-update))))
 
 

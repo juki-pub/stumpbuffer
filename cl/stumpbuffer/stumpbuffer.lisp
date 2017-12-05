@@ -285,14 +285,14 @@ respectively."
       (ensure-directories-exist file)
       (dump-to-file (dump-group group) file))))
 
-(defcommand stumpbuffer-restore-group (group-num file auto-populate)
+(defcommand stumpbuffer-restore-group (group-num file)
     ((:number "Group number: ")
      (:string "File: ")
      (:y-or-n "Auto populate: "))
   (with-simple-error-handling
     (let ((group (find-group-by-number group-num))
           (dump (read-dump-from-file file)))
-      (restore-group group dump auto-populate))))
+      (restore-group group dump))))
 
 (defvar *window-data-fields* nil)
 (defvar *group-data-fields* nil)
