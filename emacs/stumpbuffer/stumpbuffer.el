@@ -77,6 +77,11 @@
   :type 'character
   :group 'stumpbuffer)
 
+(defcustom stumpbuffer-window-field-ellipsis-character ?…
+  "The character to use as an ellipsis when truncating field value."
+  :type 'character
+  :group 'stumpbuffer)
+
 (defcustom stumpbuffer-stumpish-quote-arguments-with-spaces-p nil
   "Should arguments with spaces be quoted?
 
@@ -1159,9 +1164,10 @@ With a prefix argument this also focuses the window."
                  (len (length entry)))
             (insert (if width
                         (format (if (> len width)
-                                    (format "%%-%d.%ds..."
-                                            (- width 3)
-                                            (- width 3))
+                                    (format "%%-%d.%ds%c"
+                                            (- width 1)
+                                            (- width 1)
+                                            stumpbuffer-window-field-ellipsis-character)
                                   (format "%%-%ds" width))
                                 entry)
                       entry))))
