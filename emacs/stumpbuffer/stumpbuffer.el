@@ -4,7 +4,7 @@
 ;; Copyright (C) 2017 juki
 
 ;; Author: juki <juki_pub@outlook.com>
-;; Version: 0.1
+;; Version: 0.2
 
 ;; This file is not part of GNU Emacs.
 

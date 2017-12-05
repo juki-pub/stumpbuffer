@@ -287,8 +287,7 @@ respectively."
 
 (defcommand stumpbuffer-restore-group (group-num file)
     ((:number "Group number: ")
-     (:string "File: ")
-     (:y-or-n "Auto populate: "))
+     (:string "File: "))
   (with-simple-error-handling
     (let ((group (find-group-by-number group-num))
           (dump (read-dump-from-file file)))
