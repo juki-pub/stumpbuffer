@@ -54,7 +54,7 @@
   | ~Q~       | Make a frame the only frame in the group                                                |
   | ~C~       | Create new group (takes marked windows with it)                                         |
   | ~f~       | Toggle frame name display                                                               |
-  | ~r~       | Renumber group or window                                                                |
+  | ~r~       | Renumber group, frame or window                                                         |
   | ~`~       | Cycle filter groups                                                                     |
   | ~^~       | Select filter group by name                                                             |
   | ~/ h~     | Push a quick filter to hide hidden groups                                               |
