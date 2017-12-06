@@ -1162,15 +1162,17 @@ With a prefix argument this also focuses the window."
                                       (funcall format-fn value))
                                   "")))
                  (len (length entry)))
-            (insert (if width
-                        (format (if (> len width)
-                                    (format "%%-%d.%ds%c"
-                                            (- width 1)
-                                            (- width 1)
-                                            stumpbuffer-window-field-ellipsis-character)
-                                  (format "%%-%ds" width))
-                                entry)
-                      entry))))
+            (cond
+             ((null width) (insert entry))
+             ((and width (> len width))
+              (sb--with-property
+                  'help-echo entry
+                (insert (format (format "%%-%d.%ds%c"
+                                        (- width 1)
+                                        (- width 1)
+                                        stumpbuffer-window-field-ellipsis-character)
+                                entry))))
+             (t (insert (format (format "%%-%ds" width) entry))))))
         (insert " ")))
     (insert "\n")))
 
