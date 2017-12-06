@@ -202,6 +202,9 @@
    For example, to quickly filter down to windows whose title contains
    the word "emacs", use ~/ r emacs RET~. Using ~\~ will remove the
    filter.
+
+   The customization option ~stumpbuffer-persistent-quick-filters-p~
+   can be set to ~t~ to keep quick filters when closing the buffer.
    
 * Extending
 
