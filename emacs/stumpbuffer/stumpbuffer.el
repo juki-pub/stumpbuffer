@@ -176,6 +176,8 @@ Only set to T if your Stumpwm supports that."
     (define-key map (kbd "/ c") 'stumpbuffer-push-show-windows-by-class-filter)
     (define-key map (kbd "/ R") 'stumpbuffer-push-show-windows-by-role-filter)
     (define-key map (kbd "/ i") 'stumpbuffer-push-show-windows-by-instance-filter)
+    (define-key map (kbd "/ g") 'stumpbuffer-push-hide-group-filter)
+    (define-key map (kbd "/ G") 'stumpbuffer-push-show-group-filter)
     map))
 
 (defvar stumpbuffer-mode-group-map
@@ -1053,6 +1055,22 @@ With a prefix argument this also focuses the window."
                                           (sb--get-all-window-values :instance)))))
   (stumpbuffer-push-quick-filter
    `(:show-windows :where :instance :is ,instance))
+  (stumpbuffer-update))
+
+(defun stumpbuffer-push-show-group-filter (group)
+  (interactive (list (or (cl-getf (sb--current-group-plist) :number)
+                         (cl-getf (stumpbuffer-on-frame-name) :group)
+                         (cl-getf (stumpbuffer-on-window) :group))))
+  (stumpbuffer-push-quick-filter
+   `(:show-groups :where :number :is ,group))
+  (stumpbuffer-update))
+
+(defun stumpbuffer-push-hide-group-filter (group)
+  (interactive (list (or (cl-getf (sb--current-group-plist) :number)
+                         (cl-getf (stumpbuffer-on-frame-name) :group)
+                         (cl-getf (stumpbuffer-on-window) :group))))
+  (stumpbuffer-push-quick-filter
+   `(:hide-groups :where :number :is ,group))
   (stumpbuffer-update))
 
 (defun stumpbuffer-only (group frame)

@@ -63,6 +63,8 @@
   | ~/ c~     | Push a quick filter to only show windows with a specific class                          |
   | ~/ R~     | Push a quick filter to only show windows with a specific role                           |
   | ~/ i~     | Push a quick filter to only show windows with a specific instance                       |
+  | ~/ g~     | Push a quick filter to hide the current group                                           |
+  | ~/ G~     | Push a quick filter to only show the current group                                      |
   | ~\~       | Pop the quick filter stack. Positive numeric argument pops multiple, negative pops all. |
   | ~<~       | Dump group to file                                                                      |
   | ~>~       | Restore group from file                                                                 |
